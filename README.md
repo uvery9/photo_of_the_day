@@ -63,15 +63,9 @@ Set ws = createObject("WScript.shell")
 
 
 #### 5.将set_wallpaper.vbs添加到开机执行脚本
-
-​	win+r 打开组策略 gpedit.msc  ->计算机配置 -> Windows设置->脚本(启动/关闭) ->启动 -> 属性 -> 添加 -> 浏览 -> 定位到vbs文件路径 C:\Users\jared\Pictures\NGC_photo_of_the_day\set_wallpaper.vbs 确定.
-
-
-
 设置vbs开机执行的参考链接:
-
-​	https://blog.csdn.net/qq_38684504/article/details/88255081
-
+​	http://www.ouyaoxiazai.com/soft/stgj/14/3093.html
+增加到计划任务中,设置延时,等待笔记本Wifi连接上.
 
 
 ### End.
