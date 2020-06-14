@@ -37,11 +37,17 @@ class WallpaperSetter():
     @staticmethod
     def set_wallpaper(pic_path):
         SPI_SETDESKWALLPAPER = 0x0014
-        SPIF_UPDATEINIFILE = 0x01;
-        SPIF_SENDWININICHANGE = 0x02;
-        ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, pic_path, \
+        SPIF_UPDATEINIFILE = 0x01
+        SPIF_SENDWININICHANGE = 0x02
+        ret = ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, pic_path, \
                                                    SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE)
-        print("set wallpaper succeed!!!")
+        if (ret == 0):
+            ret = ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, pic_path, \
+                                                   SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE)
+        if (ret == 1):
+            print("set wallpaper succeed!!!")
+        else:
+            print("set wallpaper failed!!! Try twice!")
 
     def run(self):
         img_url, img_name = self.analyse()
