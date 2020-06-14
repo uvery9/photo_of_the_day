@@ -32,6 +32,7 @@ class WallpaperSetter():
                 self._image_path = imagePath
         else:
             print("SUCCEED! IMG exists,skip: %s" % imagePath)
+    
     @staticmethod
     def set_wallpaper(pic_path):
         SPI_SETDESKWALLPAPER = 0x0014
