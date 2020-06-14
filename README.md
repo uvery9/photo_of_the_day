@@ -46,7 +46,7 @@ C:\Users\jared\AppData\Local\Programs\Python\Python38\python.exe C:\Users\jared\
 
 
 
-#### 3.修改set_wallpaper.vbs中的真实路径
+#### 4.修改set_wallpaper.vbs中的真实路径
 
 Set ws = createObject("WScript.shell")
  ws.run "cmd /c C:\Users\jared\AppData\Local\Programs\Python\Python38\python.exe C:\Users\jared\Pictures\NGC_photo_of_the_day\set_wallpaper.py > C:\Users\jared\Pictures\NGC_photo_of_the_day\output.log.txt 2>&1",vbhide
