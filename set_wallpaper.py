@@ -3,6 +3,7 @@ import requests
 import re
 import os
 import ctypes
+import time
 
 class WallpaperSetter():
     def __init__(self, path):
@@ -32,7 +33,6 @@ class WallpaperSetter():
                 self._image_path = imagePath
         else:
             print("SUCCEED! IMG exists,skip: %s" % imagePath)
-    
     @staticmethod
     def set_wallpaper(pic_path):
         SPI_SETDESKWALLPAPER = 0x0014
@@ -54,7 +54,7 @@ class WallpaperSetter():
 
 
 class BingChina(WallpaperSetter):
-    def __init__(self, path = u'C:\\Users\\jared\\Pictures\\Bing_photo_of_the_day',
+    def __init__(self, path = u'C:\\Users\\jared\\Pictures\\photo_of_the_day',
                  url = 'https://cn.bing.com/'):
         super().__init__(path)
         self._url = url
@@ -85,13 +85,13 @@ class BingChina(WallpaperSetter):
             title = title[1:]
         if title[-1] == sep:
             title = title[0:-1]
-        if re.search(r"\.jpg", image_url):
+        if re.search(r"\.jpg", image_url, re.I):
             title += ".jpg"
         return image_url, title
 
 
 class NgChina(WallpaperSetter):
-    def __init__(self, path = u'C:\\Users\\jared\\Pictures\\NGC_photo_of_the_day',
+    def __init__(self, path = u'C:\\Users\\jared\\Pictures\\photo_of_the_day',
                  url = u'http://www.ngchina.com.cn/photography/photo_of_the_day/'):
         super().__init__(path)
         self._url = url
@@ -104,12 +104,31 @@ class NgChina(WallpaperSetter):
         url_content = self.getPage(photo_of_the_day)
         item = re.search(r"<img src=\"http://[^>]+\" />", url_content).group()
         img_url = re.search(r"\"(.+)\"", item).group(1)
-        img_name = img_url.split('/')[-1]
+        try:
+            title = re.search(r"<p class=\"tab_desc\">(.+)</p>", url_content).group(1)
+        except Exception as e:
+            img_name = img_url.split('/')[-1]
+        else:
+            if re.search(r"\.jpg", img_url, re.I):
+                title += ".jpg"
+            img_name = title
         return img_url, img_name
 
 
 if __name__ == "__main__":
-    ngc = NgChina(path = u"C:\\Users\\jared\\Pictures\\NGC_photo_of_the_day")
-    ngc.run()
-    # bingChina = BingChina(path = u'C:\\Users\\jared\\Pictures\\Bing_photo_of_the_day')
-    # bingChina.run()
+    path = u"C:\\Users\\jared\\Pictures\\photo_of_the_day"
+    run_log = path + u"\\run_log.txt"
+    date = time.strftime('%Y%m%d',time.localtime(time.time()))
+    if os.path.exists(run_log):
+        with open(run_log, 'r') as f:
+            buf = f.read()
+            print("Date of the last run:%s" % buf)
+            if buf == date:
+                print("Already run today!")
+                exit(0)
+    with open(run_log, 'w') as f:
+        f.write("%s" % date)
+    ngc = NgChina(path = path)
+    bingChina = BingChina(path = path)
+    # ngc.run()
+    bingChina.run()
