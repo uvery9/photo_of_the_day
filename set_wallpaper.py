@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 import urllib.request
 import requests
 import re
@@ -18,22 +19,21 @@ class WallpaperSetter():
         response = urllib.request.urlopen(request)
         return response.read().decode("utf-8")
 
-    def download_img(self, imageUrl, path, img_name = None):
-        if not img_name:
-            img_name = imageUrl.split('/')[-1]
-        imagePath = path + "/" + img_name
-        print(imagePath)
-        if not os.path.exists(imagePath):
-            img_basename = os.path.basename(imagePath)
+    def download_img(self, imageUrl, path, img_name):
+        dir(img_name)
+        image_path = path + u"/" + img_name
+        if not os.path.exists(image_path):
+            img_basename = os.path.basename(image_path)
             try:
-                urllib.request.urlretrieve(imageUrl, imagePath)
+                urllib.request.urlretrieve(imageUrl, image_path)
             except Exception as e:
                 print("Download[%s] FAILED: %s" %(img_basename,e))
             else:
                 print("SUCCEED![%s]" % img_basename)
-                self._image_path = imagePath
+                self._image_path = image_path
         else:
-            print("SUCCEED! IMG exists,skip: %s" % imagePath)
+            print("SUCCEED! IMG exists,skip: %s" % image_path)
+            self._image_path = image_path
     @staticmethod
     def set_wallpaper(pic_path):
         SPI_SETDESKWALLPAPER = 0x0014
@@ -113,23 +113,12 @@ class NgChina(WallpaperSetter):
             if re.search(r"\.jpg", img_url, re.I):
                 title += ".jpg"
             img_name = title
+
         return img_url, img_name
 
 
 if __name__ == "__main__":
     path = u"C:\\Users\\jared\\Pictures\\photo_of_the_day"
-    run_log = path + u"\\run_log.txt"
-    date = time.strftime('%Y%m%d',time.localtime(time.time()))
-    if os.path.exists(run_log):
-        with open(run_log, 'r') as f:
-            buf = f.read()
-            print("Date of the last run:%s" % buf)
-            if buf == date:
-                print("Already run today!")
-                exit(0)
-    with open(run_log, 'w') as f:
-        f.write("%s" % date)
-
     if random.randint(0,1) == 0:
         wallpaper_setter = NgChina(path = path)
     else:
