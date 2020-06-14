@@ -4,6 +4,7 @@ import re
 import os
 import ctypes
 import time
+import random
 
 class WallpaperSetter():
     def __init__(self, path):
@@ -128,7 +129,11 @@ if __name__ == "__main__":
                 exit(0)
     with open(run_log, 'w') as f:
         f.write("%s" % date)
-    ngc = NgChina(path = path)
-    bingChina = BingChina(path = path)
-    # ngc.run()
-    bingChina.run()
+
+    if random.randint(0,1) == 0:
+        wallpaper_setter = NgChina(path = path)
+    else:
+        wallpaper_setter = BingChina(path = path)
+    wallpaper_setter.run()
+
+
