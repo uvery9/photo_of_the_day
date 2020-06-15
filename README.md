@@ -12,14 +12,20 @@ https://cn.bing.com/
 
 
 ### 依赖:
-
 python3
-
 #### python依赖:
-
-urllib
-ctypes
+##### 公共依赖
+urllib.request
 requests
+re
+os
+ctypes
+random
+##### 每日聚焦依赖
+shutil
+imghdr
+Pillow
+time
 
 
 ### 使用方法
@@ -33,8 +39,8 @@ https://www.python.org/downloads/
 #### 2.修改set_wallpaper.py的图片存储路径
 
 ngc = NgChina(path= u"C:\\Users\\jared\\Pictures\\NGC_photo_of_the_day")
-
-
+##### 如果使用每日聚焦,更新每日聚焦中的路径
+self._local_path = "C:\\Users\\jared\\AppData\\Local\\Packages\\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\\LocalState\\Assets"
 
 #### 3.运行set_wallpaper.py,看是否能够成功.
 
@@ -43,8 +49,6 @@ ngc = NgChina(path= u"C:\\Users\\jared\\Pictures\\NGC_photo_of_the_day")
 C:\Users\jared\AppData\Local\Programs\Python\Python38\python.exe C:\Users\jared\Pictures\NGC_photo_of_the_day\set_wallpaper.py
 
 定位修改问题
-
-
 
 #### 4.修改set_wallpaper.vbs中的真实路径
 
@@ -62,13 +66,11 @@ Set ws = createObject("WScript.shell")
 
 
 
-#### 5.将set_wallpaper.vbs添加到开机执行脚本
-设置vbs开机执行的参考链接:
-​	http://www.ouyaoxiazai.com/soft/stgj/14/3093.html
-增加到计划任务中,设置延时,等待笔记本Wifi连接上.
+#### 5.将set_wallpaper.vbs添加到开机启动项
+复制脚本到路径:
+C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp
 
-
-### End.
+### End. Enjoy it!!!
 
 
 
