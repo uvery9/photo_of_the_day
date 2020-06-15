@@ -4,9 +4,7 @@ import requests
 import re
 import os
 import ctypes
-import time
 import random
-import shutil
 
 class WallpaperSetter():
     def __init__(self, path):
@@ -162,9 +160,10 @@ if __name__ == "__main__":
     elif ran == 1:
         wallpaper_setter = BingChina(path = path)
     else:
+        import shutil
         import imghdr
         from PIL import Image
+        import time
         wallpaper_setter = DailySpotlight(path = path)
 
     wallpaper_setter.run()
-
