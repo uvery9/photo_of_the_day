@@ -154,7 +154,7 @@ class DailySpotlight(WallpaperSetter):
 
 if __name__ == "__main__":
     path = u"C:\\Users\\jared\\Pictures\\photo_of_the_day"
-    ran = random.randint(0,2)
+    ran = random.randint(1,2)
     if ran == 0:
         wallpaper_setter = NgChina(path = path)
     elif ran == 1:
