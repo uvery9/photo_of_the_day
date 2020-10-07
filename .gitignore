@@ -1,4 +1,8 @@
 *.txt
 *.jpeg
+<<<<<<< HEAD
 *.jpg
 *.png
+=======
+*.jpg
+>>>>>>> a806e3fa92c26729cda0a7f897b68f85034a7043
