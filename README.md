@@ -40,16 +40,14 @@ https://www.python.org/downloads/
 
 #### 2.修改set_wallpaper.py的图片存储路径
 
-ngc = NgChina(path= u"C:\\Users\\jared\\Pictures\\NGC_photo_of_the_day")
-##### 如果使用每日聚焦,更新每日聚焦中的路径
-self._local_path = "C:\\Users\\jared\\AppData\\Local\\Packages\\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\\LocalState\\Assets"
+修改main函数中的路径
 
 
 #### 3.运行set_wallpaper.py,看是否能够成功.
 
 在cmd命令窗口下,使用
 
-C:\Users\jared\AppData\Local\Programs\Python\Python38\python.exe C:\Users\jared\Pictures\NGC_photo_of_the_day\set_wallpaper.py
+python set_wallpaper.py
 
 定位修改问题
 
@@ -57,22 +55,20 @@ C:\Users\jared\AppData\Local\Programs\Python\Python38\python.exe C:\Users\jared\
 #### 4.修改set_wallpaper.vbs中的真实路径
 
 Set ws = createObject("WScript.shell")
- ws.run "cmd /c C:\Users\jared\AppData\Local\Programs\Python\Python38\python.exe C:\Users\jared\Pictures\NGC_photo_of_the_day\set_wallpaper.py > C:\Users\jared\Pictures\NGC_photo_of_the_day\output.log.txt 2>&1",vbhide
+ws.run "cmd /c C:\Users\jared\AppData\Local\Programs\Python\Python38-32\python.exe  D:\jared\Pictures\photo_of_the_day\set_wallpaper.py > D:\jared\Pictures\photo_of_the_day\output.log.txt 2>&1",vbhide
 
-其中,包括python.exe的完整路径
+其中,包括
+1) python.exe的完整路径
 
-set_wallpaper.py的完整路径
+2) set_wallpaper.py的完整路径
 
-输出日志的路径,可以不设置.如果不设置,则简化为
-
-Set ws = createObject("WScript.shell")
- ws.run "cmd /c C:\Users\jared\AppData\Local\Programs\Python\Python38\python.exe C:\Users\jared\Pictures\NGC_photo_of_the_day\set_wallpaper.py ",vbhide
-
+3) 输出日志的路径,可以不设置
 
 
 #### 5.将set_wallpaper.vbs添加到开机启动项
 复制脚本到路径:
 C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp
+或 cp_to_startup_dir.bat (360等安全软件如果拦截,请允许该程序所有操作.)
 
 
 ##                                                       End. Enjoy it!!!
