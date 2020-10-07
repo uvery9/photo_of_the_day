@@ -11,7 +11,7 @@ import shutil
 import imghdr
 from PIL import Image
 import time
-        
+
 class WallpaperSetter():
     def __init__(self, path):
         self._path = path
@@ -159,9 +159,27 @@ class DailySpotlight(WallpaperSetter):
         else:
             return False
 
+def mkdir(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+        print("mkdir path: %s" % path)
+
+def show_all_environ():
+    """
+    打印所有环境变量，遍历字典
+    """
+    env_dist = os.environ  # environ是在os.py中定义的一个dict environ = {}
+    for key in env_dist:
+        print(key + ' : ' + env_dist[key])
 
 if __name__ == "__main__":
     path = u"D:\\jared\\Pictures\\photo_of_the_day"
+    root = os.path.abspath(path)[:3]  # 获取当前目录所在硬盘的根目录
+    rest = os.path.abspath(path)[3:]
+    if not os.path.exists(root):
+        path = "C:\\" + rest
+        print("drive {} doesn't exist. \nUSE new path: {}".format(root, path))
+    mkdir(path)
     ran = random.randint(1,2)
     if ran == 0:
         wallpaper_setter = NgChina(path = path)
