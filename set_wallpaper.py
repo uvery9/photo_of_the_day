@@ -6,6 +6,12 @@ import os
 import ctypes
 import random
 
+
+import shutil
+import imghdr
+from PIL import Image
+import time
+        
 class WallpaperSetter():
     def __init__(self, path):
         self._path = path
@@ -42,11 +48,10 @@ class WallpaperSetter():
                                                    SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE)
         if (ret == 0):
             ret = ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, pic_path, 0)
-        print("ret = %d" % ret)
         if (ret == 1):
             print("set wallpaper succeed!!!")
         else:
-            print("set wallpaper failed!!! Try twice!")
+            print("set wallpaper failed, Try again!")
 
     def run(self):
         img_url, img_name = self.analyse()
@@ -81,7 +86,7 @@ class BingChina(WallpaperSetter):
             title = re.search(r'class="sc_light" title="(.*?)"', r.text).group(1)
         except AttributeError:
             print('Wrong parse rules.')
-            return
+            return None
 
         image_url = urllib.parse.urljoin(r.url, url)
         title = title.replace('/', ' ')
@@ -150,20 +155,19 @@ class DailySpotlight(WallpaperSetter):
         image_path = self.analyse()
         if image_path:
             self.set_wallpaper(image_path)
+            return True
+        else:
+            return False
 
 
 if __name__ == "__main__":
-    path = u"C:\\Users\\jared\\Pictures\\photo_of_the_day"
+    path = u"D:\\jared\\Pictures\\photo_of_the_day"
     ran = random.randint(1,2)
     if ran == 0:
         wallpaper_setter = NgChina(path = path)
     elif ran == 1:
         wallpaper_setter = BingChina(path = path)
     else:
-        import shutil
-        import imghdr
-        from PIL import Image
-        import time
         wallpaper_setter = DailySpotlight(path = path)
 
     wallpaper_setter.run()
