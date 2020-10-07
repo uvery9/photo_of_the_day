@@ -65,10 +65,11 @@ ws.run "cmd /c C:\Users\jared\AppData\Local\Programs\Python\Python38-32\python.e
 3) 输出日志的路径,可以不设置
 
 
+
 #### 5.将set_wallpaper.vbs添加到开机启动项
-复制脚本到路径:
+1) 复制set_wallpaper.vbs到路径:
 C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp
-或 cp_to_startup_dir.bat (360等安全软件如果拦截,请允许该程序所有操作.)
+2) 或者运行 cp_to_startup_dir.bat (如果360等安全软件拦截,请允许该程序所有操作.)
 
 
 ##                                                       End. Enjoy it!!!
