@@ -171,7 +171,11 @@ def show_all_environ():
         print(key + ' : ' + env_dist[key])
 
 if __name__ == "__main__":
+    # YOU HAVE TO SPECIFY THE FOLLOWING PATH
+    # path and DailySpotlight local path
     path = u"D:\\jared\\Pictures\\photo_of_the_day"
+    local_path = "C:\\Users\\jared\\AppData\\Local\\Packages\\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\\LocalState\\Assets"
+
     root = os.path.abspath(path)[:3]  # 获取当前目录所在硬盘的根目录
     rest = os.path.abspath(path)[3:]
     if not os.path.exists(root):
@@ -184,7 +188,6 @@ if __name__ == "__main__":
     elif ran == 1:
         wallpaper_setter = BingChina(path = path)
     else:
-        local_path = "C:\\Users\\jared\\AppData\\Local\\Packages\\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\\LocalState\\Assets"
         wallpaper_setter = DailySpotlight(path = path, local_path = local_path)
 
     wallpaper_setter.run()
