@@ -65,8 +65,7 @@ class WallpaperSetter():
 
 
 class BingChina(WallpaperSetter):
-    def __init__(self, path = u'C:\\Users\\jared\\Pictures\\photo_of_the_day',
-                 url = 'https://cn.bing.com/'):
+    def __init__(self, path, url = 'https://cn.bing.com/'):
         super().__init__(path)
         self._url = url
 
@@ -102,8 +101,7 @@ class BingChina(WallpaperSetter):
 
 
 class NgChina(WallpaperSetter):
-    def __init__(self, path = u'C:\\Users\\jared\\Pictures\\photo_of_the_day',
-                 url = u'http://www.ngchina.com.cn/photography/photo_of_the_day/'):
+    def __init__(self, path, url = u'http://www.ngchina.com.cn/photography/photo_of_the_day/'):
         super().__init__(path)
         self._url = url
 
@@ -127,9 +125,9 @@ class NgChina(WallpaperSetter):
         return img_url, img_name
 
 class DailySpotlight(WallpaperSetter):
-    def __init__(self, path = u'C:\\Users\\jared\\Pictures\\photo_of_the_day'):
+    def __init__(self, path, local_path):
         super().__init__(path)
-        self._local_path = "C:\\Users\\jared\\AppData\\Local\\Packages\\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\\LocalState\\Assets"
+        self._local_path = local_path
 
     def analyse(self):
         files = os.listdir(self._local_path)
@@ -186,6 +184,7 @@ if __name__ == "__main__":
     elif ran == 1:
         wallpaper_setter = BingChina(path = path)
     else:
-        wallpaper_setter = DailySpotlight(path = path)
+        local_path = "C:\\Users\\jared\\AppData\\Local\\Packages\\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\\LocalState\\Assets"
+        wallpaper_setter = DailySpotlight(path = path, local_path = local_path)
 
     wallpaper_setter.run()
