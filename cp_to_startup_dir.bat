@@ -1,0 +1,1 @@
+xcopy /y set_wallpaper.vbs  "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp"
