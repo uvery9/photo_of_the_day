@@ -63,7 +63,7 @@ python set_wallpaper.py
 #### 4.修改set_wallpaper.vbs中的真实路径
 
 Set ws = createObject("WScript.shell")
-ws.run "cmd /c C:\Users\jared\AppData\Local\Programs\Python\Python38-32\python.exe  D:\jared\Pictures\photo_of_the_day\set_wallpaper.py > D:\jared\Pictures\photo_of_the_day\output.log.txt 2>&1",vbhide
+ws.run "cmd /c C:\Users\jared\AppData\Local\Programs\Python\Python38-32\python.exe  D:\jared\coding\photo_of_the_day\set_wallpaper.py > D:\jared\coding\photo_of_the_day\output.log.txt 2>&1",vbhide
 
 
 
