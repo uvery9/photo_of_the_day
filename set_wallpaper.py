@@ -173,7 +173,7 @@ def show_all_environ():
 if __name__ == "__main__":
     # YOU HAVE TO SPECIFY THE FOLLOWING PATH
     # path and DailySpotlight local path
-    path = u"D:\\jared\\coding\\photo_of_the_day"
+    path = u"D:\\jared\\Pictures\\photo_of_the_day"
     local_path = "C:\\Users\\jared\\AppData\\Local\\Packages\\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\\LocalState\\Assets"
 
     root = os.path.abspath(path)[:3]  # 获取当前目录所在硬盘的根目录
