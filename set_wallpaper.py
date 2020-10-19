@@ -97,6 +97,7 @@ class BingChina(WallpaperSetter):
             title = title[0:-1]
         if re.search(r"\.jpg", image_url, re.I):
             title += ".jpg"
+        print(title)
         return image_url, title
 
 
