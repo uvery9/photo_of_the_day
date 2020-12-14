@@ -13,9 +13,10 @@ from PIL import Image
 import time
 
 class WallpaperSetter():
-    def __init__(self, path):
+    def __init__(self, path, set = True):
         self._path = path
         self._image_path = None
+        self._set = set
 
     def getPage(self, url):
         user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36 Edg/83.0.478.45"
@@ -57,7 +58,7 @@ class WallpaperSetter():
         img_url, img_name = self.analyse()
         print("img_url:  %s" % img_url)
         self.download_img(img_url, self._path, img_name)
-        if self._image_path:
+        if self._image_path and self._set:
             self.set_wallpaper(self._image_path)
 
     def analyse(self):
@@ -65,9 +66,10 @@ class WallpaperSetter():
 
 
 class BingChina(WallpaperSetter):
-    def __init__(self, path, url = 'https://cn.bing.com/'):
+    def __init__(self, path, set = True, url = 'https://cn.bing.com/'):
         super().__init__(path)
         self._url = url
+        self._set = set
 
     # https://www.jianshu.com/p/1e4aa36ec778
     def analyse(self):
@@ -189,6 +191,8 @@ if __name__ == "__main__":
     elif ran == 1:
         wallpaper_setter = BingChina(path = path)
     else:
+        wallpaper_setter = BingChina(path = path, set = False)
+        wallpaper_setter.run() # download the pic.
         wallpaper_setter = DailySpotlight(path = path, local_path = local_path)
 
     wallpaper_setter.run()
