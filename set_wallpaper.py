@@ -12,6 +12,26 @@ import imghdr
 from PIL import Image
 import time
 
+# 同时输出到控制台和文件中
+import sys
+class Logger(object):
+    def __init__(self, filehandle = None, stream=sys.stdout):
+	    self.terminal = stream
+	    self.log = filehandle
+	
+    # write()函数这样写，每调用一次就写到记录文件中，不需要等待程序运行结束。
+    def write(self, message):
+        self.terminal.write(message)
+        self.terminal.flush()
+        self.log.write(message)
+        self.log.flush()
+
+    def flush(self):
+	    pass
+    # with open('output.stdout.txt', 'w') as filehandle:
+        # sys.stdout = Logger(filehandle, sys.stdout)
+        # sys.stderr = Logger(filehandle, sys.stderr)		# redirect std err, if necessary
+
 class WallpaperSetter():
     def __init__(self, path, set = True):
         self._path = path
@@ -33,12 +53,12 @@ class WallpaperSetter():
             try:
                 urllib.request.urlretrieve(imageUrl, image_path)
             except Exception as e:
-                print("Download[%s] FAILED: %s" %(img_basename,e))
+                print("Download [%s] FAILED: %s" %(img_basename,e))
             else:
-                print("SUCCEED![%s]" % img_basename)
+                print("Downloaded [%s]" % img_basename)
                 self._image_path = image_path
         else:
-            print("SUCCEED! IMG exists,skip: %s" % image_path)
+            print("IMG exists, skip: %s" % image_path)
             self._image_path = image_path
     @staticmethod
     def set_wallpaper(pic_path):
@@ -50,13 +70,17 @@ class WallpaperSetter():
         if (ret == 0):
             ret = ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, pic_path, 0)
         if (ret == 1):
-            print("set wallpaper succeed!!!")
+            print("")
+            print(">>>> Set wallpaper succeed! <<<<")
+            print("")
         else:
-            print("set wallpaper failed, Try again!")
+            print("")
+            print(">>>> Set wallpaper failed, Try again! <<<<")
+            print("")
 
     def run(self):
         img_url, img_name = self.analyse()
-        print("img_url:  %s" % img_url)
+        print("URL:  %s" % img_url)
         self.download_img(img_url, self._path, img_name)
         if self._image_path and self._set:
             self.set_wallpaper(self._image_path)
@@ -99,7 +123,7 @@ class BingChina(WallpaperSetter):
             title = title[0:-1]
         if re.search(r"\.jpg", image_url, re.I):
             title += ".jpg"
-        print(title)
+        #print(title)
         return image_url, title
 
 
@@ -147,7 +171,7 @@ class DailySpotlight(WallpaperSetter):
         file_times_created = os.path.getctime(src_file)
         dest_file = time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(file_times_created))
         dest_file = os.path.join(self._path, dest_file + "." + imghdr.what(src_file))
-        print("DailySpotlight:%s" % dest_file)
+        print("DailySpotlight: %s" % dest_file)
         if not os.path.exists(dest_file):
             shutil.copy(src_file, dest_file)
         return dest_file
@@ -163,11 +187,17 @@ class DailySpotlight(WallpaperSetter):
 def generate_DailySpotlight_local_path():
     local_path_cmb = os.environ.get("LOCALAPPDATA") + '\\Packages\\'
     files = os.listdir(local_path_cmb)
+    ContentDeliveryManager = None
     for i in files:
         if re.search(r'Microsoft\.Windows\.ContentDeliveryManager', i):
-            local_path_cmb += i
-    local_path_cmb += '\\LocalState\\Assets'
-    return local_path_cmb
+            ContentDeliveryManager = i
+    if ContentDeliveryManager:        
+        local_path_cmb += ContentDeliveryManager
+        local_path_cmb += '\\LocalState\\Assets'
+        return local_path_cmb
+    else:
+        return None
+    
 
 def generate_pic_save_path():
     path = "D:\\" + os.environ.get("USERNAME") + '\\Pictures\\photo_of_the_day'
@@ -191,7 +221,15 @@ if __name__ == "__main__":
         wallpaper_setter = BingChina(path = path)
     else:
         wallpaper_setter = BingChina(path = path, set = False)
-        wallpaper_setter.run() # download the pic.
-        wallpaper_setter = DailySpotlight(path = path, local_path = generate_DailySpotlight_local_path())
+        wallpaper_setter.run()
+        print("***** JUST download the picture without setting the wallpaper. *****")
+        print("")
+
+        ds_local_path = generate_DailySpotlight_local_path()
+        if ds_local_path:
+            wallpaper_setter = DailySpotlight(path = path, local_path = ds_local_path)
+        else:
+            print("You have not enabled DailySpotlight in Windows10 Settings.")
+            exit(-1)
 
     wallpaper_setter.run()
