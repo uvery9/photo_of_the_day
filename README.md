@@ -82,6 +82,7 @@ ws.run "cmd /c C:\Users\jared\AppData\Local\Programs\Python\Python38-32\python.e
 
 
 ###                                                       四. Enjoy it!!!
-
+如果生成的exe 360报毒,就自己使用build.bat生成.
+具体干了哪些事,可以看得到.
 
 
