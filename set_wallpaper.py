@@ -160,32 +160,31 @@ class DailySpotlight(WallpaperSetter):
         else:
             return False
 
-def mkdir(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
-        print("mkdir path: %s" % path)
+def generate_DailySpotlight_local_path():
+    local_path_cmb = os.environ.get("LOCALAPPDATA") + '\\Packages\\'
+    files = os.listdir(local_path_cmb)
+    for i in files:
+        if re.search(r'Microsoft\.Windows\.ContentDeliveryManager', i):
+            local_path_cmb += i
+    local_path_cmb += '\\LocalState\\Assets'
+    return local_path_cmb
 
-def show_all_environ():
-    """
-    打印所有环境变量，遍历字典
-    """
-    env_dist = os.environ  # environ是在os.py中定义的一个dict environ = {}
-    for key in env_dist:
-        print(key + ' : ' + env_dist[key])
-
-if __name__ == "__main__":
-    # YOU HAVE TO SPECIFY THE FOLLOWING PATH
-    # path and DailySpotlight local path
-    path = u"D:\\jared\\Pictures\\photo_of_the_day"
-    local_path = "C:\\Users\\jared\\AppData\\Local\\Packages\\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\\LocalState\\Assets"
-
-    root = os.path.abspath(path)[:3]  # 获取当前目录所在硬盘的根目录
+def generate_pic_save_path():
+    path = "D:\\" + os.environ.get("USERNAME") + '\\Pictures\\photo_of_the_day'
+    root = os.path.abspath(path)[:3]  # get the root dir of hard disk.
     rest = os.path.abspath(path)[3:]
     if not os.path.exists(root):
         path = "C:\\" + rest
         print("drive {} doesn't exist. \nUSE new path: {}".format(root, path))
-    mkdir(path)
-    ran = random.randint(1,2)
+    if not os.path.exists(path):
+        os.makedirs(path)
+        print("mkdir path: %s" % path)
+    return path
+
+
+if __name__ == "__main__":
+    path = generate_pic_save_path()
+    ran = random.randint(1, 2)
     if ran == 0:
         wallpaper_setter = NgChina(path = path)
     elif ran == 1:
@@ -193,6 +192,6 @@ if __name__ == "__main__":
     else:
         wallpaper_setter = BingChina(path = path, set = False)
         wallpaper_setter.run() # download the pic.
-        wallpaper_setter = DailySpotlight(path = path, local_path = local_path)
+        wallpaper_setter = DailySpotlight(path = path, local_path = generate_DailySpotlight_local_path())
 
     wallpaper_setter.run()

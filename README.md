@@ -10,7 +10,7 @@ http://www.ngchina.com.cn/photography/photo_of_the_day/
 
 https://cn.bing.com/
 
-"C:\\Users\\jared\\AppData\\Local\\Packages\\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\\LocalState\\Assets"
+"C:\\Users\\\$USERNAME\\AppData\\Local\\Packages\\Microsoft.Windows.ContentDeliveryManager_$HASH\\LocalState\\Assets"
 
 
 ### 二. 依赖:
@@ -25,7 +25,10 @@ os
 ctypes
 random
 
+
+
 ##### 每日聚焦依赖
+
 shutil
 imghdr
 Pillow
@@ -42,14 +45,8 @@ https://www.python.org/downloads/
 
 
 
-#### 2.修改set_wallpaper.py的图片存储路径
 
-修改main函数中的路径
-
-
-
-
-#### 3.运行set_wallpaper.py,看是否能够成功.
+#### 2.运行set_wallpaper.py,看是否能够成功.
 
 在cmd命令窗口下,使用
 
@@ -60,7 +57,7 @@ python set_wallpaper.py
 
 
 
-#### 4.修改set_wallpaper.vbs中的真实路径
+#### 3.修改set_wallpaper.vbs中的真实路径
 
 Set ws = createObject("WScript.shell")
 ws.run "cmd /c C:\Users\jared\AppData\Local\Programs\Python\Python38-32\python.exe  D:\jared\coding\photo_of_the_day\set_wallpaper.py > D:\jared\coding\photo_of_the_day\output.log.txt 2>&1",vbhide
@@ -76,7 +73,7 @@ ws.run "cmd /c C:\Users\jared\AppData\Local\Programs\Python\Python38-32\python.e
 
 
 
-#### 5.将set_wallpaper.vbs添加到开机启动项
+#### 4.将set_wallpaper.vbs添加到开机启动项
 1) 复制set_wallpaper.vbs到路径:
 	C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp
 2) 或者运行 cp_to_startup_dir.bat (如果360等安全软件拦截,请允许该程序所有操作.)
