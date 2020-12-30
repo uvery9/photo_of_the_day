@@ -2,10 +2,10 @@
 rd /s /q Release
 md Release
 
-pyinstaller  -F set_wallpaper.py
+pyinstaller  -F -i photo_of_the_day.ico set_wallpaper.py
 move /y dist\set_wallpaper.exe Release\set_wallpaper.exe
 
-pyinstaller  -F -w set_wallpaper.py
+pyinstaller  -F -w -i photo_of_the_day.ico set_wallpaper.py
 move /y dist\set_wallpaper.exe Release\set_wallpaper_noconsole.exe
 
 echo "********************built********************"
