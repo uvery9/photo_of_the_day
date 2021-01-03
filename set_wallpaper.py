@@ -6,7 +6,6 @@ import os
 import ctypes
 import random
 
-
 import shutil
 import imghdr
 from PIL import Image
@@ -87,6 +86,40 @@ class WallpaperSetter():
 
     def analyse(self):
         raise NotImplementedError('Must be implemented by the subclass')
+    
+    def add_water_mark(self, ori_image_file, water_mark_text="Water Print", font_type = None, font_size=18, font_color=(255, 255, 255)):
+        from PIL import Image
+        from PIL import ImageDraw
+        from PIL import ImageFont
+        prefix = ori_image_file.split(".")[0]
+        suffix = ori_image_file.split(".")[1]
+        target_file = prefix + "_watermark." + suffix
+        if os.path.exists(target_file):
+            return target_file
+        # set the font
+        if not font_type:
+            font_type = "C:\\Windows\\Fonts\\Microsoft YaHei UI\\msyh.ttc"
+        font = ImageFont.truetype(font_type, font_size)
+
+        # open image
+        img = Image.open(ori_image_file)    
+        # print(water_mark_text)
+        hans_total = 0
+        for s in water_mark_text:
+            # 中文字符其实还有很多，但几乎都用不到，这个范围已经足够了
+            if '\u4e00' <= s <= '\u9fef':
+                hans_total += 1
+        font_count = len(water_mark_text) + hans_total
+        font_len = font_count * font_size // 2
+        # print(font_len)
+        # add water mark
+        draw = ImageDraw.Draw(img)
+        draw.text((img.width - font_len - 50, img.height - 80), water_mark_text, font_color, font=font)
+        draw = ImageDraw.Draw(img)
+
+        # save to target file
+        img.save(target_file)
+        return target_file
 
 
 class BingChina(WallpaperSetter):
@@ -114,6 +147,7 @@ class BingChina(WallpaperSetter):
             return None
 
         image_url = urllib.parse.urljoin(r.url, url)
+        water_mark = title
         title = title.replace('/', ' ')
         sep = '_'
         title = re.sub('\W+', sep, title)
@@ -124,8 +158,14 @@ class BingChina(WallpaperSetter):
         if re.search(r"\.jpg", image_url, re.I):
             title += ".jpg"
         #print(title)
-        return image_url, title
-
+        return image_url, title, water_mark
+    
+    def run(self):
+        img_url, img_name, water_mark = self.analyse()
+        print("URL:  %s" % img_url)
+        self.download_img(img_url, self._path, img_name)
+        if self._image_path and self._set:
+            self.set_wallpaper(self.add_water_mark(self._image_path, water_mark))
 
 class NgChina(WallpaperSetter):
     def __init__(self, path, url = u'http://www.ngchina.com.cn/photography/photo_of_the_day/'):
