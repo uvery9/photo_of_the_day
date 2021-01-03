@@ -164,8 +164,9 @@ class BingChina(WallpaperSetter):
         img_url, img_name, water_mark = self.analyse()
         print("URL:  %s" % img_url)
         self.download_img(img_url, self._path, img_name)
+        water_mark_pic = self.add_water_mark(self._image_path, water_mark)
         if self._image_path and self._set:
-            self.set_wallpaper(self.add_water_mark(self._image_path, water_mark))
+            self.set_wallpaper(water_mark_pic)
 
 class NgChina(WallpaperSetter):
     def __init__(self, path, url = u'http://www.ngchina.com.cn/photography/photo_of_the_day/'):
