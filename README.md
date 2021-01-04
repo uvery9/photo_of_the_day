@@ -20,24 +20,18 @@ python3
 
 https://www.python.org/downloads/
 
-#### python依赖:
-urllib.request
+#### python3依赖
 requests
-re
-os
-ctypes
-random
 
-shutil
-imghdr
 Pillow
-time
+
+pip install -r requirements.txt
 
 
 
 ### 三. 更简单的使用方法
 
-运行 cp_exe_to_startup_dir.bat, 会将 Release\set_wallpaper_noconsole.exe 复制到Windows启动文件夹中,**Enjoy it!!!**
+运行 cp_exe_to_startup_dir.bat, 会将 Release\set_wallpaper_noconsole.exe 复制到Windows启动文件夹中(单exe已经打包了本人的运行环境)
 
 注意: 如果杀毒软件拦截,请信任bat脚本行为+软件的安全.
 

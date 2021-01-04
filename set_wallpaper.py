@@ -87,7 +87,7 @@ class WallpaperSetter():
     def analyse(self):
         raise NotImplementedError('Must be implemented by the subclass')
     
-    def add_water_mark(self, ori_image_file, water_mark_text="Water Print", font_type = None, font_size=18, font_color=(255, 255, 255)):
+    def add_water_mark(self, ori_image_file, water_mark_text="Water Print", font_type="YaHei", font_size=18, font_color=(255, 255, 255)):
         from PIL import Image
         from PIL import ImageDraw
         from PIL import ImageFont
@@ -97,25 +97,28 @@ class WallpaperSetter():
         if os.path.exists(target_file):
             return target_file
         # set the font
-        if not font_type:
+        if font_type == "YaHei":
             font_type = "C:\\Windows\\Fonts\\Microsoft YaHei UI\\msyh.ttc"
         font = ImageFont.truetype(font_type, font_size)
 
         # open image
         img = Image.open(ori_image_file)    
-        # print(water_mark_text)
+        
+        # Calculate the pixel size of the string
         hans_total = 0
         for s in water_mark_text:
-            # 中文字符其实还有很多，但几乎都用不到，这个范围已经足够了
+            # There are actually many Chinese characters, but almost none of them are used. This range is sufficient
             if '\u4e00' <= s <= '\u9fef':
                 hans_total += 1
         font_count = len(water_mark_text) + hans_total
         font_len = font_count * font_size // 2
         # print(font_len)
+        
         # add water mark
         draw = ImageDraw.Draw(img)
         draw.text((img.width - font_len - 50, img.height - 80), water_mark_text, font_color, font=font)
         draw = ImageDraw.Draw(img)
+        print("Add watermark: {}".format(water_mark_text))
 
         # save to target file
         img.save(target_file)
