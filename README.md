@@ -31,7 +31,7 @@ pip install -r requirements.txt
 
 ### 三. 更简单的使用方法
 
-运行 cp_exe_to_startup_dir.bat, 会将 Release\set_wallpaper_noconsole.exe 复制到Windows启动文件夹中(单exe已经打包了本人的运行环境)
+运行 cp_exe_to_startup_dir.bat, 会将 Release\set_wallpaper.exe 复制到Windows启动文件夹中(单exe已经打包了本人的运行环境)
 
 注意: 如果杀毒软件拦截,请信任bat脚本行为+软件的安全.
 
@@ -54,7 +54,7 @@ python set_wallpaper.py
 
 #### 2. 生成二进制文件
 
-见 build.bat 生成set_wallpaper_noconsole.exe
+见 build.bat 生成set_wallpaper.exe
 
 
 
