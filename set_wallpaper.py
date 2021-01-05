@@ -262,9 +262,9 @@ def generate_pic_save_path():
     return path
  
 
-def load_config(ngChina="no", bingChina="yes", dailySpotlight="yes", dlFlag="yes"):
+def load_config(path, ngChina="no", bingChina="yes", dailySpotlight="yes", dlFlag="yes"):
     config = configparser.ConfigParser()
-    config_file = "config.ini"
+    config_file = path + "\\config.ini"
     if os.path.exists(config_file):
         config.read(config_file)
         photoOfTheDayConfig = config['PhotoOfTheDay']  
@@ -281,6 +281,7 @@ def load_config(ngChina="no", bingChina="yes", dailySpotlight="yes", dlFlag="yes
         with open(config_file, 'w') as configfile:
             config.write(configfile)
         print("Create default config.ini file.")
+        os.system( "attrib +h " + config_file) # hide config.ini
         return ngChina, bingChina, dailySpotlight, dlFlag
 
 def configparser_sample():
@@ -310,7 +311,7 @@ def configparser_sample():
 
 if __name__ == "__main__":
     path = generate_pic_save_path()
-    ngchina, bingchina, daily_spotlight, always_dl_bing_wallpaper = load_config(ngChina="no", bingChina="yes", dailySpotlight="yes", dlFlag="yes")
+    ngchina, bingchina, daily_spotlight, always_dl_bing_wallpaper = load_config(path, ngChina="no", bingChina="yes", dailySpotlight="yes", dlFlag="yes")
     
     if always_dl_bing_wallpaper == "yes" and bingchina == "yes":
         wallpaper_setter = BingChina(path = path, set = False)
