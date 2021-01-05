@@ -10,6 +10,7 @@ import shutil
 import imghdr
 from PIL import Image
 import time
+import configparser
 
 # 同时输出到控制台和文件中
 import sys
@@ -69,13 +70,11 @@ class WallpaperSetter():
         if (ret == 0):
             ret = ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, pic_path, 0)
         if (ret == 1):
-            print("")
-            print(">>>> Set wallpaper succeed! <<<<")
-            print("")
+            print("\n>>>> Set wallpaper succeed! <<<<")
+            print("wallpaper path: {}\n".format(pic_path))
         else:
-            print("")
-            print(">>>> Set wallpaper failed, Try again! <<<<")
-            print("")
+            print("\n>>>> Set wallpaper failed, Try again! <<<<\n")
+
 
     def run(self):
         img_url, img_name = self.analyse()
@@ -189,17 +188,16 @@ class NgChina(WallpaperSetter):
         photo_of_the_day = self._url + html_suffix
         print("photo_of_the_day:  %s" % photo_of_the_day)
         url_content = self.getPage(photo_of_the_day)
-        item = re.search(r"<img src=\"http://[^>]+\" />", url_content).group()
-        img_url = re.search(r"\"(.+)\"", item).group(1)
         try:
+            item = re.search(r"<img src=\"http://[^>]+\"/>", url_content).group()
+            img_url = re.search(r"\"(.+)\"", item).group(1)      
             title = re.search(r"<p class=\"tab_desc\">(.+)</p>", url_content).group(1)
         except Exception as e:
-            img_name = img_url.split('/')[-1]
+            print(e)
         else:
             if re.search(r"\.jpg", img_url, re.I):
                 title += ".jpg"
             img_name = title
-
         return img_url, img_name
 
 class DailySpotlight(WallpaperSetter):
@@ -222,7 +220,7 @@ class DailySpotlight(WallpaperSetter):
         file_times_created = os.path.getctime(src_file)
         dest_file = time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(file_times_created))
         dest_file = os.path.join(self._path, dest_file + "." + imghdr.what(src_file))
-        print("DailySpotlight: %s" % dest_file)
+        # print("DailySpotlight: %s" % dest_file)
         if not os.path.exists(dest_file):
             shutil.copy(src_file, dest_file)
         return dest_file
@@ -247,6 +245,7 @@ def generate_DailySpotlight_local_path():
         local_path_cmb += '\\LocalState\\Assets'
         return local_path_cmb
     else:
+        print("You have not enabled DailySpotlight in Windows10 Settings.")
         return None
     
 
@@ -261,25 +260,81 @@ def generate_pic_save_path():
         os.makedirs(path)
         print("mkdir path: %s" % path)
     return path
+ 
+
+def load_config(ngChina="no", bingChina="yes", dailySpotlight="yes", dlFlag="yes"):
+    config = configparser.ConfigParser()
+    config_file = "config.ini"
+    if os.path.exists(config_file):
+        config.read(config_file)
+        photoOfTheDayConfig = config['PhotoOfTheDay']  
+        ngchina = photoOfTheDayConfig['ngchina']
+        bingchina = photoOfTheDayConfig['bingchina']
+        daily_spotlight = photoOfTheDayConfig['daily.spotlight']
+        dl_flag = photoOfTheDayConfig['alwaysdownload.bing.wallpaper']
+        return ngchina, bingchina, daily_spotlight, dl_flag
+    else:
+        config['PhotoOfTheDay'] = {'ngchina': ngChina,
+                        'bingchina': bingChina,
+                        'daily.spotlight': dailySpotlight,
+                        'alwaysdownload.bing.wallpaper': dlFlag}
+        with open(config_file, 'w') as configfile:
+            config.write(configfile)
+        print("Create default config.ini file.")
+        return ngChina, bingChina, dailySpotlight, dlFlag
+
+def configparser_sample():
+    conf = configparser.ConfigParser()
+    conf.read("config.ini")
+    
+    # 获取指定的section， 指定的option的值
+    name = conf.get("section1", "name")
+    age = conf.get("section1", "age")
+
+    #获取所有的section
+    sections = conf.sections()
+
+    print(name, age, sections)
+    
+    # 更新指定section, option的值
+    conf.set("section2", "port", "8081")
+    # 写入指定section, 增加新option的值
+    conf.set("section2", "IEPort", "80")
+    
+    # 添加新的 section
+    conf.add_section("new_section")
+    conf.set("new_section", "new_option", "http://www.cnblogs.com/tankxiao")  
+    # 写回配置文件
+    conf.write(open("c:\\test.conf","w"))
 
 
 if __name__ == "__main__":
     path = generate_pic_save_path()
-    ran = random.randint(1, 2)
-    if ran == 0:
-        wallpaper_setter = NgChina(path = path)
-    elif ran == 1:
-        wallpaper_setter = BingChina(path = path)
-    else:
+    ngchina, bingchina, daily_spotlight, always_dl_bing_wallpaper = load_config(ngChina="no", bingChina="yes", dailySpotlight="yes", dlFlag="yes")
+    
+    if always_dl_bing_wallpaper == "yes" and bingchina == "yes":
         wallpaper_setter = BingChina(path = path, set = False)
         wallpaper_setter.run()
-        print("***** JUST download the picture without setting the wallpaper. *****")
-        print("")
-
-        ds_local_path = generate_DailySpotlight_local_path()
-        if ds_local_path:
-            wallpaper_setter = DailySpotlight(path = path, local_path = ds_local_path)
-        else:
-            print("You have not enabled DailySpotlight in Windows10 Settings.")
-            wallpaper_setter = BingChina(path = path)
+        print("***** JUST download the picture without setting the wallpaper. *****\n")
+    
+    # generate usable list
+    wallpaper_list = list()
+    if ngchina == "yes":
+        wallpaper_list.append("ngchina")
+    if bingchina == "yes":
+        wallpaper_list.append("bingchina")
+    
+    local_path = generate_DailySpotlight_local_path()
+    if daily_spotlight == "yes" and local_path:
+        wallpaper_list.append("daily_spotlight")
+    
+    # random select one.
+    ran = random.choice(wallpaper_list)
+    if ran == "ngchina":
+        wallpaper_setter = NgChina(path = path)
+    elif ran == "bingchina":
+        wallpaper_setter = BingChina(path = path)
+    elif ran == "daily_spotlight":
+        wallpaper_setter = DailySpotlight(path = path, local_path = local_path)
     wallpaper_setter.run()
+    
