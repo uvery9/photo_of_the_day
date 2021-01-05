@@ -62,6 +62,9 @@ class WallpaperSetter():
             self._image_path = image_path
     @staticmethod
     def set_wallpaper(pic_path):
+        if os.environ.get("OS") != "Windows_NT":
+            print("not Windows, sorry.")
+            return None
         SPI_SETDESKWALLPAPER = 0x0014
         SPIF_UPDATEINIFILE = 0x01
         SPIF_SENDWININICHANGE = 0x02
@@ -229,9 +232,6 @@ class DailySpotlight(WallpaperSetter):
         image_path = self.analyse()
         if image_path:
             self.set_wallpaper(image_path)
-            return True
-        else:
-            return False
 
 def generate_DailySpotlight_local_path():
     local_path_cmb = os.environ.get("LOCALAPPDATA") + '\\Packages\\'
