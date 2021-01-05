@@ -90,7 +90,7 @@ class WallpaperSetter():
         from PIL import Image
         from PIL import ImageDraw
         from PIL import ImageFont
-        prefix = ori_image_file.split(".")[0]
+        prefix = ori_image_file.split(".")[0].replace("_orig", "")
         suffix = ori_image_file.split(".")[1]
         target_file = prefix + "_watermark." + suffix
         if os.path.exists(target_file):
@@ -165,7 +165,7 @@ class BingChina(WallpaperSetter):
         if title[-1] == sep:
             title = title[0:-1]
         if re.search(r"\.jpg", image_url, re.I):
-            title += ".jpg"
+            title += "_orig.jpg"
         #print(title)
         return image_url, title, water_mark
     
