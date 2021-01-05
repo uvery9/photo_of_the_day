@@ -99,6 +99,13 @@ class WallpaperSetter():
         # set the font
         if font_type == "YaHei":
             font_type = "C:\\Windows\\Fonts\\Microsoft YaHei UI\\msyh.ttc"
+        
+        user_font_dir = 'C:\\Users\\' + os.environ.get("USERNAME") + '\\AppData\\Local\\Microsoft\\Windows\\Fonts\\'
+        opposans_font = 'OPPOSans-R.ttf'
+        font_dir = user_font_dir + opposans_font
+        if os.path.exists(font_dir):
+            # font_type = font_dir
+            print(opposans_font)
         font = ImageFont.truetype(font_type, font_size)
 
         # open image
