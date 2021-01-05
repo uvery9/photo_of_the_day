@@ -281,6 +281,5 @@ if __name__ == "__main__":
             wallpaper_setter = DailySpotlight(path = path, local_path = ds_local_path)
         else:
             print("You have not enabled DailySpotlight in Windows10 Settings.")
-            exit(-1)
-
+            wallpaper_setter = BingChina(path = path)
     wallpaper_setter.run()
