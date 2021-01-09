@@ -211,21 +211,32 @@ class DailySpotlight(WallpaperSetter):
     def analyse(self):
         files = os.listdir(self._local_path)
         file_list = list()
+        phone_file_list = list()
         for file in files:
             fi_d = os.path.join(self._local_path, file)
-            if (os.path.getsize(fi_d)//1024 > 100) and imghdr.what(fi_d) != "png":
+            if (os.path.getsize(fi_d)//1024 > 100):
+                #  and imghdr.what(fi_d) != "png"
                 img_pillow = Image.open(fi_d)
                 if img_pillow.width > (img_pillow.height + 500):
                     file_list.append(fi_d)
+                else:
+                    phone_file_list.append(fi_d)       
         file_list.sort(key=lambda x:os.path.getctime(x))
+        phone_file_list.sort(key=lambda x:os.path.getctime(x))
         src_file = file_list[-1]
+        phone_src_file = phone_file_list[-1]
         # new file name.
         file_times_created = os.path.getctime(src_file)
+        phone_file_times_created = os.path.getctime(phone_src_file)
         dest_file = time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(file_times_created))
+        phone_dest_file = time.strftime('%Y-%m-%d_%H-%M-%S-phone', time.localtime(phone_file_times_created))
         dest_file = os.path.join(self._path, dest_file + "." + imghdr.what(src_file))
+        phone_dest_file = os.path.join(self._path, phone_dest_file + "." + imghdr.what(phone_src_file))
         # print("DailySpotlight: %s" % dest_file)
         if not os.path.exists(dest_file):
             shutil.copy(src_file, dest_file)
+        if not os.path.exists(phone_dest_file):
+            shutil.copy(phone_src_file, phone_dest_file)
         return dest_file
 
     def run(self):
