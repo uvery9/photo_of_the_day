@@ -261,12 +261,13 @@ def generate_DailySpotlight_local_path():
     
 
 def generate_pic_save_path():
-    path = "D:\\" + os.environ.get("USERNAME") + '\\Pictures\\photo_of_the_day'
-    root = os.path.abspath(path)[:3]  # get the root dir of hard disk.
-    rest = os.path.abspath(path)[3:]
-    if not os.path.exists(root):
-        path = "C:\\" + rest
-        print("drive {} doesn't exist. \nUSE new path: {}".format(root, path))
+    # path = "D:\\" + os.environ.get("USERNAME") + '\\Pictures\\photo_of_the_day'
+    path = os.environ.get("USERPROFILE") + '\\Pictures\\photo_of_the_day'
+    # root = os.path.abspath(path)[:3]  # get the root dir of hard disk.
+    # rest = os.path.abspath(path)[3:]
+    #if not os.path.exists(root):
+    #    path = "C:\\" + rest
+    #    print("drive {} doesn't exist. \nUSE new path: {}".format(root, path))
     if not os.path.exists(path):
         os.makedirs(path)
         print("mkdir path: %s" % path)
@@ -288,7 +289,7 @@ def load_config(path, ngChina="no", bingChina="yes", dailySpotlight="yes", dlFla
         config['PhotoOfTheDay'] = {'ngchina': ngChina,
                         'bingchina': bingChina,
                         'daily.spotlight': dailySpotlight,
-                        'alwaysdownload.bing.wallpaper': dlFlag}
+                        'alwaysdownload.bing.wallpaper': dlFlag }
         with open(config_file, 'w') as configfile:
             config.write(configfile)
         print("Create default config.ini file.")
