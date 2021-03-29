@@ -125,7 +125,7 @@ class WallpaperSetter():
         
         # add water mark
         draw = ImageDraw.Draw(img)
-        draw.text((img.width - font_len - 50, img.height - 80), water_mark_text, font_color, font=font)
+        draw.text((img.width - font_len - 50, img.height - 85), water_mark_text, font_color, font=font)
         draw = ImageDraw.Draw(img)
         print("Add watermark: {}".format(water_mark_text))
 
