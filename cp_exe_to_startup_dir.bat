@@ -18,4 +18,4 @@ endlocal
 
 :: copy vbs to startup directory.
 cd /d %~dp0
-xcopy /y Release\set_wallpaper.exe  "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp"
+xcopy /y Release\photo_of_the_day.exe  "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp"

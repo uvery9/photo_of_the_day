@@ -2,3 +2,4 @@
 *.jpg
 *.png
 config.ini
+Release/**

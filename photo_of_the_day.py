@@ -45,9 +45,7 @@ class WallpaperSetter():
         response = urllib.request.urlopen(request)
         return response.read().decode("utf-8")
 
-    def download_img(self, imageUrl, path, img_name):
-        dir(img_name)
-        image_path = path + u"/" + img_name
+    def download_img(self, imageUrl, image_path):
         if not os.path.exists(image_path):
             img_basename = os.path.basename(image_path)
             try:
@@ -60,6 +58,7 @@ class WallpaperSetter():
         else:
             print("IMG exists, skip: %s" % image_path)
             self._image_path = image_path
+    
     @staticmethod
     def set_wallpaper(pic_path):
         if os.environ.get("OS") != "Windows_NT":
@@ -80,24 +79,19 @@ class WallpaperSetter():
 
 
     def run(self):
-        img_url, img_name = self.analyse()
-        print("URL:  %s" % img_url)
-        self.download_img(img_url, self._path, img_name)
-        if self._image_path and self._set:
-            self.set_wallpaper(self._image_path)
+        raise NotImplementedError('Must be implemented by the subclass')
 
     def analyse(self):
         raise NotImplementedError('Must be implemented by the subclass')
+
     
-    def add_water_mark(self, ori_image_file, water_mark_text="Water Print", font_type="YaHei", font_size=18, font_color=(255, 255, 255)):
+    def add_water_mark(self, ori_image_file, dest_file, water_mark_text="Water Print", font_size=18, font_type="YaHei", font_color=(255, 255, 255)):
         from PIL import Image
         from PIL import ImageDraw
-        from PIL import ImageFont
-        prefix = ori_image_file.split(".")[0].replace("_orig", "")
-        suffix = ori_image_file.split(".")[1]
-        target_file = prefix + "_watermark." + suffix
-        if os.path.exists(target_file):
-            return target_file
+        from PIL import ImageFont 
+        if os.path.exists(dest_file):
+            return dest_file
+        
         # set the font
         if font_type == "YaHei":
             font_type = "C:\\Windows\\Fonts\\Microsoft YaHei UI\\msyh.ttc"
@@ -125,13 +119,13 @@ class WallpaperSetter():
         
         # add water mark
         draw = ImageDraw.Draw(img)
-        draw.text((img.width - font_len - 50, img.height - 85), water_mark_text, font_color, font=font)
+        draw.text((img.width - font_len - 50, img.height - 90), water_mark_text, font_color, font=font)
         draw = ImageDraw.Draw(img)
         print("Add watermark: {}".format(water_mark_text))
 
         # save to target file
-        img.save(target_file)
-        return target_file
+        img.save(dest_file)
+        return dest_file
 
 
 class BingChina(WallpaperSetter):
@@ -168,17 +162,24 @@ class BingChina(WallpaperSetter):
         if title[-1] == sep:
             title = title[0:-1]
         if re.search(r"\.jpg", image_url, re.I):
-            title += "_orig.jpg"
-        #print(title)
+            title += ".jpg"
+            # WMK: watermark abbr.
         return image_url, title, water_mark
     
     def run(self):
         img_url, img_name, water_mark = self.analyse()
         print("URL:  %s" % img_url)
-        self.download_img(img_url, self._path, img_name)
-        water_mark_pic = self.add_water_mark(self._image_path, water_mark)
-        if self._image_path and self._set:
-            self.set_wallpaper(water_mark_pic)
+        prefix = img_name.split(".")[0]
+        suffix = img_name.split(".")[1]
+        dest_file = prefix + "-WMK." + suffix
+        dest_file = os.path.join(self._path, dest_file)
+        if not os.path.exists(dest_file):
+            self.download_img(img_url, os.path.join(self._path,img_name))
+            self.add_water_mark(self._image_path, dest_file, water_mark, font_size=18)
+            os.remove(os.path.join(self._path,img_name))
+        if os.path.exists(dest_file) and self._set:
+            self.set_wallpaper(dest_file)
+
 
 class NgChina(WallpaperSetter):
     def __init__(self, path, url = u'http://www.ngchina.com.cn/photography/photo_of_the_day/'):
@@ -202,6 +203,23 @@ class NgChina(WallpaperSetter):
                 title += ".jpg"
             img_name = title
         return img_url, img_name
+    
+    def run(self):
+        img_url, img_name = self.analyse()
+        water_mark = img_name
+        print("URL:  %s" % img_url)
+        prefix = img_name.split(".")[0]
+        suffix = img_name.split(".")[1]
+        water_mark = prefix
+        dest_file = prefix + "-WMK." + suffix
+        dest_file = os.path.join(self._path, dest_file)
+        if not os.path.exists(dest_file):
+            self.download_img(img_url, os.path.join(self._path,img_name))
+            self.add_water_mark(self._image_path, dest_file, water_mark, font_size=18)
+            os.remove(os.path.join(self._path,img_name))
+        if os.path.exists(dest_file) and self._set:
+            self.set_wallpaper(dest_file)
+
 
 class DailySpotlight(WallpaperSetter):
     def __init__(self, path, local_path):
