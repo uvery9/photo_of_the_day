@@ -12,32 +12,149 @@ from PIL import Image
 import time
 import configparser
 
-# 同时输出到控制台和文件中
-import sys
-class Logger(object):
-    def __init__(self, filehandle = None, stream=sys.stdout):
-	    self.terminal = stream
-	    self.log = filehandle
-	
-    # write()函数这样写，每调用一次就写到记录文件中，不需要等待程序运行结束。
-    def write(self, message):
-        self.terminal.write(message)
-        self.terminal.flush()
-        self.log.write(message)
-        self.log.flush()
+class OnlineOrLocalCLS():
+    def __init__(self):
+        self._config_file = os.path.join(os.getcwd(), "config.ini")
 
-    def flush(self):
-	    pass
-    # with open('output.stdout.txt', 'w') as filehandle:
-        # sys.stdout = Logger(filehandle, sys.stdout)
-        # sys.stderr = Logger(filehandle, sys.stderr)		# redirect std err, if necessary
 
-class WallpaperSetter():
-    def __init__(self, path, set = True):
-        self._path = path
+    def load_config(self, cfg_file):
+        self.creart_def_cfg()
+
+    def creart_def_cfg(self):
+        config = configparser.ConfigParser()
+        if not os.path.exists(self._config_file):
+            config['OnlineOrLocal'] = {
+                'use_wallpapersetter': "no",
+                'use_photooftheday': "yes"                
+            }
+            config = self.def_online_cfg()
+            config = self.def_local_cfg()
+            config = self.def_online_cfg()
+            with open(self._config_file, 'w') as configfile:
+                    config.write(configfile)
+            print("Create default config.ini file.")
+    
+    def def_local_cfg(self, cfg, ngchina='no', bingchina='yes', daily_spotlight='yes', alwaysdl_bing='yes'):
+        cfg['WallpaperSetter'] = {
+                'img_dir': "C:\\Users\\SOMEONE\\Pictures",
+                'copy_folder': "None",
+                'want2copy': "no",
+                'scan': "yes",
+                'create_usage_stat': "once",
+                'mtime': "None",
+                'last_img_dir': "None",
+                'wallpaper': "C:\\Users\\SOMEONE\\Pictures\\OnePicture.jpeg"
+        }
+        return cfg
+
+    def def_online_cfg(self, cfg, ngchina='no', bingchina='yes', daily_spotlight='yes', alwaysdl_bing='yes'):
+        cfg['PhotoOfTheDay'] = {'ngchina':                       ngchina,
+                                'bingchina':                     bingchina,
+                                'daily.spotlight':               daily_spotlight,
+                                'alwaysdownload.bing.wallpaper': alwaysdl_bing
+        }
+        return cfg    
+    
+    @staticmethod
+    def set_wallpaper(img_file):
+        if os.environ.get("OS") != "Windows_NT":
+            print("not Windows, sorry.")
+            return None
+        SPI_SETDESKWALLPAPER = 0x0014
+        SPIF_UPDATEINIFILE = 0x01
+        SPIF_SENDWININICHANGE = 0x02
+        ret = ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, img_file, \
+                                                   SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE)
+        if (ret == 0):
+            ret = ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, img_file, 0)
+        if (ret == 1):
+            print("\n>>>> Set wallpaper succeed! <<<<")
+            print("Wallpaper PATH: {}\n".format(img_file))
+        else:
+            print("\n>>>> Set Wallpaper failed, Try again! <<<<\n")
+
+class OnlineWallpaper(OnlineOrLocalCLS):
+    def __init__(self, path=None, choice=None, ngchina="no", bingchina="yes", daily_spotlight="yes", alwaysdl_bing="yes"):
+        super().__init__()
+        if path:
+            self._path = path
+        else:
+            self._path = self.generate_pic_save_path()
         self._image_path = None
-        self._set = set
+        self._ngchina = ngchina
+        self._bingchina = bingchina
+        self._daily_spotlight = daily_spotlight
+        self._alwaysdl_bing = alwaysdl_bing
+        self.load_config()
+        if choice:
+            self.choice = choice
+        else:
+            self.choice = self.random_choice()
+    
+    def generate_pic_save_path(self):
+        # path = "D:\\" + os.environ.get("USERNAME") + '\\Pictures\\photo_of_the_day'
+        path = os.environ.get("USERPROFILE") + '\\Pictures\\photo_of_the_day'
+        # root = os.path.abspath(path)[:3]  # get the root dir of hard disk.
+        # rest = os.path.abspath(path)[3:]
+        #if not os.path.exists(root):
+        #    path = "C:\\" + rest
+        #    print("drive {} doesn't exist. \nUSE new path: {}".format(root, path))
+        if not os.path.exists(path):
+            os.makedirs(path)
+            print("mkdir path: %s" % path)
+        return path
+    
+    def random_choice(self):
+        # generate usable list
+        wallpaper_list = list()
+        if self._ngchina.lower() == "yes":
+            wallpaper_list.append("ngchina")
+        if self._bingchina.lower() == "yes":
+            wallpaper_list.append("bingchina")
+        if self._daily_spotlight.lower() == "yes":
+            wallpaper_list.append("daily_spotlight")
+        # random select one.
+        self.choice = random.choice(wallpaper_list)
+        return self.choice
 
+    def load_config(self):
+        config = configparser.ConfigParser()
+        config_file = self._config_file
+        if os.path.exists(config_file):
+            config.read(config_file)
+            onlinelocalCfg = config['OnlineOrLocal']
+            use_photooftheday = onlinelocalCfg['use_photooftheday']
+            if use_photooftheday.lower() == "yes":
+                photoOfTheDayCfg = config['PhotoOfTheDay'] 
+                self._ngchina         = photoOfTheDayCfg['ngchina']
+                self._bingchina       = photoOfTheDayCfg['bingchina']
+                self._daily_spotlight = photoOfTheDayCfg['daily.spotlight']
+                self._alwaysdl_bing         = photoOfTheDayCfg['alwaysdownload.bing.wallpaper']
+        else:
+            config['OnlineOrLocal'] = {
+                'use_wallpapersetter': "no",
+                'use_photooftheday': "yes"                
+            }
+            config['PhotoOfTheDay'] = {'ngchina':                       self._ngchina,
+                                       'bingchina':                     self._bingchina,
+                                       'daily.spotlight':               self._daily_spotlight,
+                                       'alwaysdownload.bing.wallpaper': self._alwaysdl_bing
+            }
+            config['WallpaperSetter'] = {
+                'img_dir': "C:\\Users\\SOMEONE\\Pictures",
+                'copy_folder': "None",
+                'want2copy': "no",
+                'scan': "yes",
+                'create_usage_stat': "once",
+                'mtime': "None",
+                'last_img_dir': "None",
+                'wallpaper': "C:\\Users\\SOMEONE\\Pictures\\OnePicture.jpeg"
+            }
+            with open(config_file, 'w') as configfile:
+                config.write(configfile)
+            print("Create default config.ini file.")
+            # os.system( "attrib +h " + config_file) # hide config.ini
+  
     def getPage(self, url):
         user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36 Edg/83.0.478.45"
         headers = { "Referer" : url, "User-Agent":user_agent }
@@ -58,25 +175,6 @@ class WallpaperSetter():
         else:
             print("IMG exists, skip: %s" % image_path)
             self._image_path = image_path
-    
-    @staticmethod
-    def set_wallpaper(pic_path):
-        if os.environ.get("OS") != "Windows_NT":
-            print("not Windows, sorry.")
-            return None
-        SPI_SETDESKWALLPAPER = 0x0014
-        SPIF_UPDATEINIFILE = 0x01
-        SPIF_SENDWININICHANGE = 0x02
-        ret = ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, pic_path, \
-                                                   SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE)
-        if (ret == 0):
-            ret = ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, pic_path, 0)
-        if (ret == 1):
-            print("\n>>>> Set wallpaper succeed! <<<<")
-            print("wallpaper path: {}\n".format(pic_path))
-        else:
-            print("\n>>>> Set wallpaper failed, Try again! <<<<\n")
-
 
     def run(self):
         raise NotImplementedError('Must be implemented by the subclass')
@@ -128,11 +226,10 @@ class WallpaperSetter():
         return dest_file
 
 
-class BingChina(WallpaperSetter):
-    def __init__(self, path, set = True, url = 'https://cn.bing.com/'):
-        super().__init__(path)
+class BingChina(OnlineWallpaper):
+    def __init__(self, path=None, choice=None, url='https://cn.bing.com/'):
+        super().__init__(path=path, choice=choice)
         self._url = url
-        self._set = set
 
     # https://www.jianshu.com/p/1e4aa36ec778
     def analyse(self):
@@ -167,6 +264,8 @@ class BingChina(WallpaperSetter):
         return image_url, title, water_mark
     
     def run(self):
+        if self.choice != "bingchina" and self._alwaysdl_bing.lower() != "yes":
+            return  "NOT bingchina"
         img_url, img_name, water_mark = self.analyse()
         print("URL:  %s" % img_url)
         prefix = img_name.split(".")[0]
@@ -177,13 +276,16 @@ class BingChina(WallpaperSetter):
             self.download_img(img_url, os.path.join(self._path,img_name))
             self.add_water_mark(self._image_path, dest_file, water_mark, font_size=18)
             os.remove(os.path.join(self._path,img_name))
-        if os.path.exists(dest_file) and self._set:
+
+        if self.choice.lower() == "bingchina" and os.path.exists(dest_file):
             self.set_wallpaper(dest_file)
+        else:
+            print("***** JUST download the picture without setting the wallpaper. *****\n")
 
 
-class NgChina(WallpaperSetter):
-    def __init__(self, path, url = u'http://www.ngchina.com.cn/photography/photo_of_the_day/'):
-        super().__init__(path)
+class NgChina(OnlineWallpaper):
+    def __init__(self, path=None, choice=None, url = u'http://www.ngchina.com.cn/photography/photo_of_the_day/'):
+        super().__init__(path=path, choice=choice)
         self._url = url
 
     def analyse(self):
@@ -205,6 +307,8 @@ class NgChina(WallpaperSetter):
         return img_url, img_name
     
     def run(self):
+        if self.choice != "ngchina":
+            return  "NOT ngchina"     
         img_url, img_name = self.analyse()
         water_mark = img_name
         print("URL:  %s" % img_url)
@@ -217,14 +321,34 @@ class NgChina(WallpaperSetter):
             self.download_img(img_url, os.path.join(self._path,img_name))
             self.add_water_mark(self._image_path, dest_file, water_mark, font_size=18)
             os.remove(os.path.join(self._path,img_name))
-        if os.path.exists(dest_file) and self._set:
+        if os.path.exists(dest_file):
             self.set_wallpaper(dest_file)
 
 
-class DailySpotlight(WallpaperSetter):
-    def __init__(self, path, local_path):
-        super().__init__(path)
-        self._local_path = local_path
+class DailySpotlight(OnlineWallpaper):
+    def __init__(self, path=None, choice=None, local_path=None):
+        super().__init__(path=path, choice=choice)
+        if not local_path:
+            local_path = self.generate_dailyspotlight_local_path()
+            if os.path.exists(local_path):
+                self._local_path = local_path
+            else:
+                raise Exception("dailyspotlight_local_path doesn't exist.")
+
+    def generate_dailyspotlight_local_path(self):
+        local_path_cmb = os.environ.get("LOCALAPPDATA") + '\\Packages\\'
+        files = os.listdir(local_path_cmb)
+        ContentDeliveryManager = None
+        for i in files:
+            if re.search(r'Microsoft\.Windows\.ContentDeliveryManager', i):
+                ContentDeliveryManager = i
+        if ContentDeliveryManager:        
+            local_path_cmb += ContentDeliveryManager
+            local_path_cmb += '\\LocalState\\Assets'
+            return local_path_cmb
+        else:
+            print("You have not enabled DailySpotlight in Windows10 Settings.")
+            return None
 
     def analyse(self):
         files = os.listdir(self._local_path)
@@ -258,61 +382,297 @@ class DailySpotlight(WallpaperSetter):
         return dest_file
 
     def run(self):
+        if self.choice != "daily_spotlight":
+            return  "NOT daily_spotlight"
         image_path = self.analyse()
         if image_path:
             self.set_wallpaper(image_path)
 
-def generate_DailySpotlight_local_path():
-    local_path_cmb = os.environ.get("LOCALAPPDATA") + '\\Packages\\'
-    files = os.listdir(local_path_cmb)
-    ContentDeliveryManager = None
-    for i in files:
-        if re.search(r'Microsoft\.Windows\.ContentDeliveryManager', i):
-            ContentDeliveryManager = i
-    if ContentDeliveryManager:        
-        local_path_cmb += ContentDeliveryManager
-        local_path_cmb += '\\LocalState\\Assets'
-        return local_path_cmb
-    else:
-        print("You have not enabled DailySpotlight in Windows10 Settings.")
-        return None
+
+
+# LOCAL IMAGE SETTER
+class WallpaperSetter(OnlineOrLocalCLS):
+    def __init__(self, img_dir):
+        super().__init__()
+        self._img_dir = img_dir
+        self._is_newtest = None
+        self._mtime_str = "NOW"
+        self._scan = None # force, yes, no
+        self._copy_folder = None
+        self._want2copy = None # want2copy = yes, no
+        self._create_usage_stat = None # always, once, no
+
+    @staticmethod
+    def size_format(size):
+        if size < 1000:
+            return '%i' % size + 'size'
+        elif 1000 <= size < 1000000:
+            return '%.1f' % float(size/1000) + 'KB'
+        elif 1000000 <= size < 1000000000:
+            return '%.1f' % float(size/1000000) + 'MB'
+        elif 1000000000 <= size < 1000000000000:
+            return '%.1f' % float(size/1000000000) + 'GB'
+        elif 1000000000000 <= size:
+            return '%.1f' % float(size/1000000000000) + 'TB'
+
+    def check_folder_mtime(self, path, mark_file):
+    # Determine whether the folder is up to date
+        self._is_newtest = True
+        if not os.path.exists(mark_file):
+            self._is_newtest = False
+            self._scan = "yes"
+        mtime = int(os.path.getmtime(path))
+        time_tuple = time.localtime(mtime) 
+        time_format = '%Y-%m-%d %H:%M:%S'
+        mtime_str = time.strftime(time_format, time_tuple)
+        
+        if self._scan.lower() == "force":
+            print("force to update. mtime[{}]".format(mtime_str))
+            self._is_newtest = False
+        
+        if self._mtime != "None":
+            time_tuple = time.strptime(self._mtime, time_format)
+            mtime_int = int(time.mktime(time_tuple))
+            if mtime > mtime_int:
+                self._is_newtest = False
+        else:
+            self._is_newtest = False
+        if not self._is_newtest:
+            self._mtime_str = mtime_str
+
+
+    # Filter images that meet the conditions
+    def images_filter(self, path):
+        img_list_txt = os.path.join(path, '_img_list.txt')
+        self.check_folder_mtime(path, img_list_txt)
+        img_list = list()
+        if not self._is_newtest and self._scan.lower()!="no":
+            img_list = list()
+            for root, dirnames, files in os.walk(path):
+                for name in files:
+                    realpath = os.path.join(root, name)
+                    name_t = name.lower()
+                    # MUST BE a image file
+                    if name_t.endswith(".jpg") or name_t.endswith(".jpeg") or name_t.endswith(".png"):
+                        # image file MUST BE larger than 100KB
+                        if os.path.getsize(realpath)//1024>100:
+                            img_pillow = Image.open(realpath)
+                            if img_pillow.width > 1900:
+                                if img_pillow.width/img_pillow.height > 1.4:
+                                    img_list.append(realpath)
+                            img_pillow.close()                            
+            self.list_converter(img_list, "to", img_list_txt)
+        else:   
+            img_list = self.list_converter(list(), "from", img_list_txt)
+        self.update_element_in_config("mtime", self._mtime_str, not self._is_newtest)
+        if not img_list:
+            print(">>> Warning: There is no image meet the requirements in the path:\n\t{}\n"
+            ">>> Consider change the path.".format(self._img_dir))
+        return img_list
+
+
+    def run(self):  
+        self.load_config(img_dir=self._img_dir)
+        if self._use_local_images.lower() != "yes":
+            print("I know you don't want to use this feature.")
+            return "I know."
+        if not os.path.exists(self._img_dir):
+            import errno
+            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), self._img_dir)
+        wallpaper_list = self.images_filter(self._img_dir)
+        if wallpaper_list:
+            img_file = random.choice(wallpaper_list)
+            if os.path.exists(img_file):
+                self.set_wallpaper(img_file)
+                self.update_element_in_config("wallpaper", img_file, True)  
+            
+
+    def load_config(self, img_dir="MUSTDEFINED", copy_folder="None", 
+            scan="yes", want2copy='no', create_usage_stat='once', use_wallpapersetter="yes", last_img_dir="None"):
+        config = configparser.ConfigParser()
+        config_file = self._config_file
+        mtime = "None"
+        if os.path.exists(config_file):
+            config.read(config_file)
+            onlinelocalCfg = config['OnlineOrLocal']
+            use_wallpapersetter = onlinelocalCfg['use_wallpapersetter']
+            if use_wallpapersetter.lower() == "yes":
+                wallpaperSetterCfg = config['WallpaperSetter']
+                img_dir = wallpaperSetterCfg['img_dir']
+                mtime = wallpaperSetterCfg['mtime']
+                last_img_dir = wallpaperSetterCfg['last_img_dir']
+                scan = wallpaperSetterCfg['scan']
+                create_usage_stat = wallpaperSetterCfg['create_usage_stat']
+                copy_folder = wallpaperSetterCfg['copy_folder']
+                want2copy = wallpaperSetterCfg['want2copy']
+
+            if img_dir != last_img_dir:
+                print("last_img_dir: {}".format(last_img_dir))
+                self.update_element_in_config("last_img_dir", img_dir, True)                
+        else:
+            config['OnlineOrLocal'] = {
+                'use_wallpapersetter': use_wallpapersetter,
+                'use_photooftheday': "no"                
+            }
+            config['PhotoOfTheDay'] = {'ngchina':                       "no",
+                                       'bingchina':                     "yes",
+                                       'daily.spotlight':               "yes",
+                                       'alwaysdownload.bing.wallpaper': "yes"
+            }
+            config['WallpaperSetter'] = {
+                'img_dir': img_dir,
+                'copy_folder': copy_folder,
+                'want2copy': want2copy,
+                'scan': scan,
+                'create_usage_stat': create_usage_stat,
+                'mtime': mtime,
+                'last_img_dir': last_img_dir,
+                'wallpaper': "None"
+            }
+            with open(config_file, 'w') as configfile:
+                config.write(configfile)
+            print("Create default config.ini file.")
+            # os.system( "attrib +h " + config_file) # hide config.ini
+        self._use_local_images = use_wallpapersetter
+        self._img_dir = img_dir
+        self._copy_folder = copy_folder
+        self._mtime = mtime
+        self._scan = scan
+        self._want2copy = want2copy
+        self._create_usage_stat = create_usage_stat
+        usage_file = os.path.join(os.getcwd(), "USAGE.TXT")
+        if not os.path.exists(usage_file) and create_usage_stat.lower() != "no":
+            with open(usage_file, 'w', encoding="utf-8") as f:
+                f.write(self.get_usage_text())
+            print("create USAGE.TXT in path [ {} ]".format(os.getcwd()))
+            if create_usage_stat.lower() == "once":
+                self.update_element_in_config("create_usage_stat", "no", True)
+
+
+    def update_element_in_config(self, element, element_date, update):
+        if update:
+            config = configparser.ConfigParser()
+            config_file = self._config_file
+            if os.path.exists(config_file):
+                config.read(config_file)
+                config.set("WallpaperSetter", element, element_date)
+                # os.system( "attrib -h " + config_file) # unhide config.ini
+                with open(config_file, 'w') as configfile:
+                    config.write(configfile)
+                # os.system( "attrib +h " + config_file) # hide config.ini
+                print("update \"{}\" = [{}] in config.ini".format(element, element_date))
     
+    def list_converter(self, list_=list(), action="from", list_file="list.txt"):
+        if action.lower() == "from":
+            list_ = list()
+            with open(list_file, 'r', encoding="utf-8") as f:
+                list_str = f.readlines()
+                for item in list_str:
+                    item = item.strip('\n')
+                    if item:
+                        item = item.split(' //', 1)[0]
+                        item = item.split(' //', 1)[0]
+                        list_.append(item)
+            return list_
+        elif action.lower() == "to":
+            with open(list_file, 'w', encoding="utf-8") as f:
+                for i in list_:
+                        f.write(i + '\n')
+            return None
+        else:
+            raise Exception("No such action[{}]".format(action))
 
-def generate_pic_save_path():
-    # path = "D:\\" + os.environ.get("USERNAME") + '\\Pictures\\photo_of_the_day'
-    path = os.environ.get("USERPROFILE") + '\\Pictures\\photo_of_the_day'
-    # root = os.path.abspath(path)[:3]  # get the root dir of hard disk.
-    # rest = os.path.abspath(path)[3:]
-    #if not os.path.exists(root):
-    #    path = "C:\\" + rest
-    #    print("drive {} doesn't exist. \nUSE new path: {}".format(root, path))
-    if not os.path.exists(path):
-        os.makedirs(path)
-        print("mkdir path: %s" % path)
-    return path
- 
+    def copyto(self, dest_dir=None):
+        if self._want2copy.lower() != "yes":
+            return "completed"
+        self.load_config(img_dir=self._img_dir)
+        if not os.path.exists(self._img_dir):
+            import errno
+            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), self._img_dir)   
+        if self._copy_folder != "None":
+            dest_dir=self._copy_folder            
+        if not os.path.exists(dest_dir):
+            os.makedirs(dest_dir)
+        files_list = self.images_filter(self._img_dir)
+        index = 0
+        exists_list = list()
+        exists_list_txt = os.path.join(dest_dir, "_existing_file_list.txt")
+        for file in files_list:
+            index += 1
+            basename = os.path.basename(file)
+            dest_file = os.path.join(dest_dir, basename)
+            
+            if os.path.exists(dest_file):
+                if not os.path.exists(exists_list_txt):
+                    exists_list.append(file)
+            
+            if not os.path.exists(dest_file):
+                shutil.copy(file, dest_file)
+                print("[{:>02d}]: copied [ {} ]".format(index, dest_file))
+        index = 0
+        if exists_list:
+            for file in exists_list:
+                index += 1
+                print("[{:>02d}]: existed [ {} ]".format(index, file))
+            exists_list.append('^^^ Some file have been named repeatedly. TIME[{}]. ^^^'.format(time.asctime(time.localtime(time.time()))))
+            self.list_converter(exists_list, "to", exists_list_txt)
+            print("\n^^^ Some file have been named repeatedly. ^^^")
+        print("Copy completed.")
+    def get_usage_text(self):
+# USAGE.TXT
+        usage_text = r'''Usage for wallpaper_setter.exe/wallpaper_setter.py
+AUTHOR: HDC <jared.dcx@gmail.com>
+-----------------------------------------
+Notice: there is only ONE file you need to configure: config.ini, 
+        it should be with wallpaper_setter.exe/wallpaper_setter.py
+-----------------------------------------
+here is a sample of config.ini:
 
-def load_config(path, ngChina="no", bingChina="yes", dailySpotlight="yes", dlFlag="yes"):
-    config = configparser.ConfigParser()
-    config_file = path + "\\config.ini"
-    if os.path.exists(config_file):
-        config.read(config_file)
-        photoOfTheDayConfig = config['PhotoOfTheDay']  
-        ngchina = photoOfTheDayConfig['ngchina']
-        bingchina = photoOfTheDayConfig['bingchina']
-        daily_spotlight = photoOfTheDayConfig['daily.spotlight']
-        dl_flag = photoOfTheDayConfig['alwaysdownload.bing.wallpaper']
-        return ngchina, bingchina, daily_spotlight, dl_flag
-    else:
-        config['PhotoOfTheDay'] = {'ngchina': ngChina,
-                        'bingchina': bingChina,
-                        'daily.spotlight': dailySpotlight,
-                        'alwaysdownload.bing.wallpaper': dlFlag }
-        with open(config_file, 'w') as configfile:
-            config.write(configfile)
-        print("Create default config.ini file.")
-        os.system( "attrib +h " + config_file) # hide config.ini
-        return ngChina, bingChina, dailySpotlight, dlFlag
+[OnlineOrLocal]
+use_wallpapersetter = yes
+use_photooftheday = no
+
+[PhotoOfTheDay]
+ngchina = no
+bingchina = yes
+daily.spotlight = yes
+alwaysdownload.bing.wallpaper = yes
+
+[WallpaperSetter]
+img_dir = C:\Users\SOMEONE\Pictures
+copy_folder = None
+want2copy = no
+scan = yes
+create_usage_stat = once
+mtime = 2021-06-06 01:54:36
+last_img_dir = None
+wallpaper = C:\Users\SOMEONE\Pictures\OnePicture.jpeg
+
+---------------------
+Section OnlineOrLocal
+1. use_photooftheday  Download the image and set it as wallpaper.
+2. use_wallpapersetter   Use local image, which means use "Section WallpaperSetter" feature.
+
+Section WallpaperSetter
+1. img_dir:           The program will scan this folder and select a image as wallpaper
+2. copy_folder:       Copy all suitable pictures to this folder from copy_folder, control by 'want2copy'
+3. want2copy:         Controlling the action of COPYING, it has two options: yes, no
+4. scan:              Controlling the action of SCANNING, it has three options: yes, no, force
+                        yes:   when 'img_dir' has been modified by OS, scan and update '_img_list.txt'
+                        no:    never scan 'img_dir' unless '_img_list.txt' doesn't exist.
+                        force: Mandatory scan 'img_dir' and update '_img_list.txt'
+5. create_usage_stat: Create and usage file flag: always, once, no
+                        always: when 'USAGE.TXT' doesn't exist, always create
+                        once:   when 'USAGE.TXT' doesn't exist, create once, you can delete, it won't create next time.
+                        no:     literally.
+6. mtime:             the modified time of 'img_dir'
+7. last_img_dir:      literally.
+8. wallpaper:         wallpaper setting history.
+-----------------------------------------
+FOR FREEDOM!
+'''
+# ^^^ USAGE.TXT
+        return usage_text
 
 def configparser_sample():
     conf = configparser.ConfigParser()
@@ -339,33 +699,61 @@ def configparser_sample():
     conf.write(open("c:\\test.conf","w"))
 
 
-if __name__ == "__main__":
-    path = generate_pic_save_path()
-    ngchina, bingchina, daily_spotlight, always_dl_bing_wallpaper = load_config(path, ngChina="no", bingChina="yes", dailySpotlight="yes", dlFlag="yes")
+
+def online_setter():   
+    online_wallpaper = OnlineWallpaper()
+    ch = online_wallpaper.choice
+    print(">>> the choice is: {}.".format(ch))   
+    bingchina = BingChina(choice=ch)
+    ngchina = NgChina(choice=ch)
+    dailyspotlight = DailySpotlight(choice=ch)
+    bingchina.run()
+    ngchina.run()
+    dailyspotlight.run()
     
-    if always_dl_bing_wallpaper == "yes" and bingchina == "yes":
-        wallpaper_setter = BingChina(path = path, set = False)
+def local_setter():
+    wallpaper_setter = WallpaperSetter(img_dir="D:\jared\erotic\[Wanimal-Wallpaper]")
+    print("Starting.")
+    try:
         wallpaper_setter.run()
-        print("***** JUST download the picture without setting the wallpaper. *****\n")
-    
-    # generate usable list
-    wallpaper_list = list()
-    if ngchina == "yes":
-        wallpaper_list.append("ngchina")
-    if bingchina == "yes":
-        wallpaper_list.append("bingchina")
-    
-    local_path = generate_DailySpotlight_local_path()
-    if daily_spotlight == "yes" and local_path:
-        wallpaper_list.append("daily_spotlight")
-    
-    # random select one.
-    ran = random.choice(wallpaper_list)
-    if ran == "ngchina":
-        wallpaper_setter = NgChina(path = path)
-    elif ran == "bingchina":
-        wallpaper_setter = BingChina(path = path)
-    elif ran == "daily_spotlight":
-        wallpaper_setter = DailySpotlight(path = path, local_path = local_path)
-    wallpaper_setter.run()
-    
+        wallpaper_setter.copyto(dest_dir="C:\\Users\\jared\\Pictures")
+    except Exception as e:
+        import traceback
+        print("{0}\n{1}".format(str(e), traceback.format_exc()))
+    else:
+        print("Finished.")  
+
+class ConfigParserReader:
+    def __init__(self, config_file=None):
+        if config_file:
+            self._config_file = config_file
+        else:
+            self._config_file = os.path.join(os.getcwd(),"config.ini")
+
+    def load_config(self):
+        config = configparser.ConfigParser()
+        config_file = self._config_file
+        if os.path.exists(config_file):
+            config.read(config_file)
+            onlinelocalCfg = config['OnlineOrLocal']
+            use_photooftheday = onlinelocalCfg['use_photooftheday']
+            use_wallpapersetter = onlinelocalCfg['use_wallpapersetter']
+            if use_wallpapersetter.lower() == "yes":
+                return "use_wallpapersetter"
+            elif use_photooftheday.lower() == "yes":
+                return "use_photooftheday"                
+            else:
+                return "DoNothing."
+        else:
+            return "NoConfig.ini"
+            
+
+if __name__ == "__main__":
+    cfg = ConfigParserReader()
+    ret = cfg.load_config()
+    if ret == "use_photooftheday":
+        online_setter()
+    elif ret == "use_wallpapersetter":
+        local_setter()
+    else:
+        online_setter()
