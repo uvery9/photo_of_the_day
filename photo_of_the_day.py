@@ -12,24 +12,54 @@ from PIL import Image
 import time
 import configparser
 
-class OnlineOrLocalCLS():
+class PyinstallerPath():
     def __init__(self):
-        self._config_file = os.path.join(os.getcwd(), "config.ini")
+        import os, sys
+        # determine if the application is a frozen `.exe` (e.g. pyinstaller --onefile) 
+        if getattr(sys, 'frozen', False):
+            application_path = os.path.dirname(sys.executable)
+        # or a script file (e.g. `.py` / `.pyw`)
+        elif __file__:
+            application_path = os.path.dirname(__file__)
+        self._getcwd = application_path
 
+class OnlineOrLocalCLS(PyinstallerPath):
+    def __init__(self):
+        super().__init__()
+        self._config_file = os.path.join(self._getcwd, "config.ini")
 
     def load_config(self, cfg_file):
-        self.creart_def_cfg()
+        raise NotImplementedError('Must be implemented by the subclass')
 
-    def creart_def_cfg(self):
+    def update_element_in_config(self, section, element, element_date, update):
+        if update:
+            config = configparser.ConfigParser()
+            config_file = self._config_file
+            if os.path.exists(config_file):
+                config.read(config_file)
+                config.set(section, element, element_date)
+                # os.system( "attrib -h/+h " + config_file) # unhide/hide
+                with open(config_file, 'w') as configfile:
+                    config.write(configfile)
+                print("update \"{}\" = [{}] in config.ini".format(element, element_date))
+
+    def get_online_or_local(self, cfg):
+        onlinelocalCfg = cfg['OnlineOrLocal']
+        use_photooftheday   = onlinelocalCfg['use_photooftheday']
+        use_wallpapersetter = onlinelocalCfg['use_wallpapersetter']
+        create_usage_stat   = onlinelocalCfg['create_usage_stat']
+        return use_photooftheday, use_wallpapersetter, create_usage_stat
+
+    def creart_def_cfg(self, use_wallpapersetter="no", use_photooftheday="yes", create_usage_stat='twice'):
         config = configparser.ConfigParser()
         if not os.path.exists(self._config_file):
             config['OnlineOrLocal'] = {
-                'use_wallpapersetter': "no",
-                'use_photooftheday': "yes"                
+                'use_wallpapersetter': use_wallpapersetter,
+                'use_photooftheday': use_photooftheday,
+                'create_usage_stat': create_usage_stat
             }
-            config = self.def_online_cfg()
-            config = self.def_local_cfg()
-            config = self.def_online_cfg()
+            config = self.def_online_cfg(config)
+            config = self.def_local_cfg(config)
             with open(self._config_file, 'w') as configfile:
                     config.write(configfile)
             print("Create default config.ini file.")
@@ -40,7 +70,6 @@ class OnlineOrLocalCLS():
                 'copy_folder': "None",
                 'want2copy': "no",
                 'scan': "yes",
-                'create_usage_stat': "once",
                 'mtime': "None",
                 'last_img_dir': "None",
                 'wallpaper': "C:\\Users\\SOMEONE\\Pictures\\OnePicture.jpeg"
@@ -72,7 +101,86 @@ class OnlineOrLocalCLS():
             print("Wallpaper PATH: {}\n".format(img_file))
         else:
             print("\n>>>> Set Wallpaper failed, Try again! <<<<\n")
+     
+    def create_usage_file(self):
+        config = configparser.ConfigParser()
+        config_file = self._config_file
+        config.read(config_file) 
+        a, b, create_usage_stat = self.get_online_or_local(config)
+        usage_file = os.path.join(self._getcwd, "USAGE.TXT")
+        if not os.path.exists(usage_file) and create_usage_stat.lower() != "no":
+            with open(usage_file, 'w', encoding="utf-8") as f:
+                f.write(self.get_usage_text())
+            print("create USAGE.TXT in path [ {} ]".format(self._getcwd))
 
+            if create_usage_stat.lower() == "twice":
+                self.update_element_in_config("OnlineOrLocal", "create_usage_stat", "once", True)
+            elif create_usage_stat.lower() == "once":
+                self.update_element_in_config("OnlineOrLocal", "create_usage_stat", "no", True) 
+
+    def get_usage_text(self):
+# USAGE.TXT
+        usage_text = r'''Usage for wallpaper_setter.exe/wallpaper_setter.py
+AUTHOR: HDC <jared.dcx@gmail.com>
+-----------------------------------------
+Notice: there is only ONE file you need to configure: config.ini, 
+        it should be with wallpaper_setter.exe/wallpaper_setter.py
+-----------------------------------------
+here is a sample of config.ini:
+
+[OnlineOrLocal]
+use_wallpapersetter = no
+use_photooftheday = yes
+create_usage_stat = twice
+
+[PhotoOfTheDay]
+ngchina = no
+bingchina = yes
+daily.spotlight = yes
+alwaysdownload.bing.wallpaper = yes
+
+[WallpaperSetter]
+img_dir = C:\Users\SOMEONE\Pictures
+copy_folder = None
+want2copy = no
+scan = yes
+mtime = None
+last_img_dir = None
+wallpaper = C:\Users\SOMEONE\Pictures\OnePicture.jpeg
+
+---------------------
+Section OnlineOrLocal
+1. use_wallpapersetter            Download the image and set it as wallpaper.
+2. use_photooftheday              Use local image, which means use "Section WallpaperSetter" feature.
+3. create_usage_stat              Create and usage file flag: always, once, no
+                                    always: when 'USAGE.TXT' doesn't exist, always create
+                                    twice:  you can't delete two times
+                                    once:   when 'USAGE.TXT' doesn't exist, create once, you can delete, it won't create next time.
+                                    no:     literally.
+--------
+Section PhotoOfTheDay
+1. ngchina                        Download "ngchina" 's image and set it as wallpaper
+2. bingchina                      Download "bingchina" 's image and set it as wallpaper
+3. daily.spotlight                Copy the image from daily.spotlight folder and set it as wallpaper 
+                                    [You have to open the feature in Windows10]
+4. alwaysdownload.bing.wallpaper  Always download bingchina wallpaper
+--------
+Section WallpaperSetter
+1. img_dir:                       The program will scan this folder and select a image as wallpaper
+2. copy_folder:                   Copy all suitable pictures to this folder from copy_folder, control by 'want2copy'
+3. want2copy:                     Controlling the action of COPYING, it has two options: yes, no
+4. scan:                          Controlling the action of SCANNING, it has three options: yes, no, force
+                                    yes:   when 'img_dir' has been modified by OS, scan and update '_img_list.txt'
+                                    no:    never scan 'img_dir' unless '_img_list.txt' doesn't exist.
+                                    force: Mandatory scan 'img_dir' and update '_img_list.txt'
+5. mtime:                         The modified time of 'img_dir'
+6. last_img_dir:                  Literally.
+7. wallpaper:                     Wallpaper setting history.
+-----------------------------------------
+FOR FREEDOM!
+'''
+# ^^^ USAGE.TXT
+        return usage_text
 class OnlineWallpaper(OnlineOrLocalCLS):
     def __init__(self, path=None, choice=None, ngchina="no", bingchina="yes", daily_spotlight="yes", alwaysdl_bing="yes"):
         super().__init__()
@@ -122,8 +230,7 @@ class OnlineWallpaper(OnlineOrLocalCLS):
         config_file = self._config_file
         if os.path.exists(config_file):
             config.read(config_file)
-            onlinelocalCfg = config['OnlineOrLocal']
-            use_photooftheday = onlinelocalCfg['use_photooftheday']
+            use_photooftheday, b, c = self.get_online_or_local(config)
             if use_photooftheday.lower() == "yes":
                 photoOfTheDayCfg = config['PhotoOfTheDay'] 
                 self._ngchina         = photoOfTheDayCfg['ngchina']
@@ -131,30 +238,9 @@ class OnlineWallpaper(OnlineOrLocalCLS):
                 self._daily_spotlight = photoOfTheDayCfg['daily.spotlight']
                 self._alwaysdl_bing         = photoOfTheDayCfg['alwaysdownload.bing.wallpaper']
         else:
-            config['OnlineOrLocal'] = {
-                'use_wallpapersetter': "no",
-                'use_photooftheday': "yes"                
-            }
-            config['PhotoOfTheDay'] = {'ngchina':                       self._ngchina,
-                                       'bingchina':                     self._bingchina,
-                                       'daily.spotlight':               self._daily_spotlight,
-                                       'alwaysdownload.bing.wallpaper': self._alwaysdl_bing
-            }
-            config['WallpaperSetter'] = {
-                'img_dir': "C:\\Users\\SOMEONE\\Pictures",
-                'copy_folder': "None",
-                'want2copy': "no",
-                'scan': "yes",
-                'create_usage_stat': "once",
-                'mtime': "None",
-                'last_img_dir': "None",
-                'wallpaper': "C:\\Users\\SOMEONE\\Pictures\\OnePicture.jpeg"
-            }
-            with open(config_file, 'w') as configfile:
-                config.write(configfile)
-            print("Create default config.ini file.")
-            # os.system( "attrib +h " + config_file) # hide config.ini
-  
+            self.creart_def_cfg()
+        self.create_usage_file()
+
     def getPage(self, url):
         user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36 Edg/83.0.478.45"
         headers = { "Referer" : url, "User-Agent":user_agent }
@@ -400,7 +486,6 @@ class WallpaperSetter(OnlineOrLocalCLS):
         self._scan = None # force, yes, no
         self._copy_folder = None
         self._want2copy = None # want2copy = yes, no
-        self._create_usage_stat = None # always, once, no
 
     @staticmethod
     def size_format(size):
@@ -464,7 +549,7 @@ class WallpaperSetter(OnlineOrLocalCLS):
             self.list_converter(img_list, "to", img_list_txt)
         else:   
             img_list = self.list_converter(list(), "from", img_list_txt)
-        self.update_element_in_config("mtime", self._mtime_str, not self._is_newtest)
+        self.update_element_in_config("WallpaperSetter", "mtime", self._mtime_str, not self._is_newtest)
         if not img_list:
             print(">>> Warning: There is no image meet the requirements in the path:\n\t{}\n"
             ">>> Consider change the path.".format(self._img_dir))
@@ -484,83 +569,38 @@ class WallpaperSetter(OnlineOrLocalCLS):
             img_file = random.choice(wallpaper_list)
             if os.path.exists(img_file):
                 self.set_wallpaper(img_file)
-                self.update_element_in_config("wallpaper", img_file, True)  
+                self.update_element_in_config("WallpaperSetter", "wallpaper", img_file, True)  
             
 
     def load_config(self, img_dir="MUSTDEFINED", copy_folder="None", 
-            scan="yes", want2copy='no', create_usage_stat='once', use_wallpapersetter="yes", last_img_dir="None"):
+            scan="yes", want2copy='no', use_wallpapersetter="yes", last_img_dir="None"):
         config = configparser.ConfigParser()
         config_file = self._config_file
         mtime = "None"
         if os.path.exists(config_file):
             config.read(config_file)
-            onlinelocalCfg = config['OnlineOrLocal']
-            use_wallpapersetter = onlinelocalCfg['use_wallpapersetter']
+            a, use_wallpapersetter,c = self.get_online_or_local(config)
             if use_wallpapersetter.lower() == "yes":
                 wallpaperSetterCfg = config['WallpaperSetter']
                 img_dir = wallpaperSetterCfg['img_dir']
                 mtime = wallpaperSetterCfg['mtime']
                 last_img_dir = wallpaperSetterCfg['last_img_dir']
                 scan = wallpaperSetterCfg['scan']
-                create_usage_stat = wallpaperSetterCfg['create_usage_stat']
                 copy_folder = wallpaperSetterCfg['copy_folder']
                 want2copy = wallpaperSetterCfg['want2copy']
-
             if img_dir != last_img_dir:
                 print("last_img_dir: {}".format(last_img_dir))
-                self.update_element_in_config("last_img_dir", img_dir, True)                
+                self.update_element_in_config("WallpaperSetter", "last_img_dir", img_dir, True)         
         else:
-            config['OnlineOrLocal'] = {
-                'use_wallpapersetter': use_wallpapersetter,
-                'use_photooftheday': "no"                
-            }
-            config['PhotoOfTheDay'] = {'ngchina':                       "no",
-                                       'bingchina':                     "yes",
-                                       'daily.spotlight':               "yes",
-                                       'alwaysdownload.bing.wallpaper': "yes"
-            }
-            config['WallpaperSetter'] = {
-                'img_dir': img_dir,
-                'copy_folder': copy_folder,
-                'want2copy': want2copy,
-                'scan': scan,
-                'create_usage_stat': create_usage_stat,
-                'mtime': mtime,
-                'last_img_dir': last_img_dir,
-                'wallpaper': "None"
-            }
-            with open(config_file, 'w') as configfile:
-                config.write(configfile)
-            print("Create default config.ini file.")
-            # os.system( "attrib +h " + config_file) # hide config.ini
+            self.creart_def_cfg()
+        
+        self.create_usage_file()
         self._use_local_images = use_wallpapersetter
         self._img_dir = img_dir
         self._copy_folder = copy_folder
         self._mtime = mtime
         self._scan = scan
         self._want2copy = want2copy
-        self._create_usage_stat = create_usage_stat
-        usage_file = os.path.join(os.getcwd(), "USAGE.TXT")
-        if not os.path.exists(usage_file) and create_usage_stat.lower() != "no":
-            with open(usage_file, 'w', encoding="utf-8") as f:
-                f.write(self.get_usage_text())
-            print("create USAGE.TXT in path [ {} ]".format(os.getcwd()))
-            if create_usage_stat.lower() == "once":
-                self.update_element_in_config("create_usage_stat", "no", True)
-
-
-    def update_element_in_config(self, element, element_date, update):
-        if update:
-            config = configparser.ConfigParser()
-            config_file = self._config_file
-            if os.path.exists(config_file):
-                config.read(config_file)
-                config.set("WallpaperSetter", element, element_date)
-                # os.system( "attrib -h " + config_file) # unhide config.ini
-                with open(config_file, 'w') as configfile:
-                    config.write(configfile)
-                # os.system( "attrib +h " + config_file) # hide config.ini
-                print("update \"{}\" = [{}] in config.ini".format(element, element_date))
     
     def list_converter(self, list_=list(), action="from", list_file="list.txt"):
         if action.lower() == "from":
@@ -618,84 +658,30 @@ class WallpaperSetter(OnlineOrLocalCLS):
             self.list_converter(exists_list, "to", exists_list_txt)
             print("\n^^^ Some file have been named repeatedly. ^^^")
         print("Copy completed.")
-    def get_usage_text(self):
-# USAGE.TXT
-        usage_text = r'''Usage for wallpaper_setter.exe/wallpaper_setter.py
-AUTHOR: HDC <jared.dcx@gmail.com>
------------------------------------------
-Notice: there is only ONE file you need to configure: config.ini, 
-        it should be with wallpaper_setter.exe/wallpaper_setter.py
------------------------------------------
-here is a sample of config.ini:
-
-[OnlineOrLocal]
-use_wallpapersetter = yes
-use_photooftheday = no
-
-[PhotoOfTheDay]
-ngchina = no
-bingchina = yes
-daily.spotlight = yes
-alwaysdownload.bing.wallpaper = yes
-
-[WallpaperSetter]
-img_dir = C:\Users\SOMEONE\Pictures
-copy_folder = None
-want2copy = no
-scan = yes
-create_usage_stat = once
-mtime = 2021-06-06 01:54:36
-last_img_dir = None
-wallpaper = C:\Users\SOMEONE\Pictures\OnePicture.jpeg
-
----------------------
-Section OnlineOrLocal
-1. use_photooftheday  Download the image and set it as wallpaper.
-2. use_wallpapersetter   Use local image, which means use "Section WallpaperSetter" feature.
-
-Section WallpaperSetter
-1. img_dir:           The program will scan this folder and select a image as wallpaper
-2. copy_folder:       Copy all suitable pictures to this folder from copy_folder, control by 'want2copy'
-3. want2copy:         Controlling the action of COPYING, it has two options: yes, no
-4. scan:              Controlling the action of SCANNING, it has three options: yes, no, force
-                        yes:   when 'img_dir' has been modified by OS, scan and update '_img_list.txt'
-                        no:    never scan 'img_dir' unless '_img_list.txt' doesn't exist.
-                        force: Mandatory scan 'img_dir' and update '_img_list.txt'
-5. create_usage_stat: Create and usage file flag: always, once, no
-                        always: when 'USAGE.TXT' doesn't exist, always create
-                        once:   when 'USAGE.TXT' doesn't exist, create once, you can delete, it won't create next time.
-                        no:     literally.
-6. mtime:             the modified time of 'img_dir'
-7. last_img_dir:      literally.
-8. wallpaper:         wallpaper setting history.
------------------------------------------
-FOR FREEDOM!
-'''
-# ^^^ USAGE.TXT
-        return usage_text
+    
 
 def configparser_sample():
     conf = configparser.ConfigParser()
     conf.read("config.ini")
     
-    # 获取指定的section， 指定的option的值
+    # get section,option value
     name = conf.get("section1", "name")
     age = conf.get("section1", "age")
 
-    #获取所有的section
+    #get all the sections
     sections = conf.sections()
 
     print(name, age, sections)
     
-    # 更新指定section, option的值
+    # update section, option value
     conf.set("section2", "port", "8081")
-    # 写入指定section, 增加新option的值
+    # write to section, add new option value
     conf.set("section2", "IEPort", "80")
     
-    # 添加新的 section
+    # add new section
     conf.add_section("new_section")
     conf.set("new_section", "new_option", "http://www.cnblogs.com/tankxiao")  
-    # 写回配置文件
+    # save to config file.
     conf.write(open("c:\\test.conf","w"))
 
 
@@ -723,12 +709,13 @@ def local_setter():
     else:
         print("Finished.")  
 
-class ConfigParserReader:
+class ConfigParserReader(PyinstallerPath):
     def __init__(self, config_file=None):
+        super().__init__()
         if config_file:
             self._config_file = config_file
         else:
-            self._config_file = os.path.join(os.getcwd(),"config.ini")
+            self._config_file = os.path.join(self._getcwd, "config.ini")
 
     def load_config(self):
         config = configparser.ConfigParser()
