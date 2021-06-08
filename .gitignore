@@ -2,6 +2,7 @@
 *.jpeg
 *.jpg
 *.png
+*.7z
 config.ini
 Release/*
 USAGE.TXT

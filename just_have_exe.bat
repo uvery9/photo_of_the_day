@@ -1,21 +1,7 @@
 @echo off
-rd /s /q Release
-md Release
-
-pyinstaller  -F -i photo_of_the_day.ico photo_of_the_day.py
-move /y dist\photo_of_the_day.exe Release\photo_of_the_day_console.exe
-
-pyinstaller  -F -w -i photo_of_the_day.ico photo_of_the_day.py
-move /y dist\photo_of_the_day.exe Release\photo_of_the_day.exe
-
-echo "********************built********************"
-
-::clean
-echo "********************cleaning temp files********************"
-rd /s /q build
-rd /s /q __pycache__
-del /q photo_of_the_day.spec
-rd /s /q dist
+title Get admin rights
+mode con cols=100 lines=20
+color 3f
 
 echo "************ copy to LOCALAPPDATA ************"
 
@@ -62,16 +48,29 @@ REM  '  oLink.WindowStyle = "1"
 REM  '  oLink.WorkingDirectory = "C:\Program Files\MyApp"
 REM oLink.Save
 
-echo "************create exe-only-release************"
-cd /d %~dp0
-rd /s /q photo_of_the_day
-md photo_of_the_day
+:: start Get admin rights
+setlocal
+set uac=~uac_permission_tmp_%random%
+md "%SystemRoot%\system32\%uac%" 2>nul
+if %errorlevel%==0 ( rd "%SystemRoot%\system32\%uac%" >nul 2>nul ) else (
+	echo set uac = CreateObject^("Shell.Application"^)>"%temp%\%uac%.vbs"
+	echo uac.ShellExecute "%~s0","","","runas",1 >>"%temp%\%uac%.vbs"
+	echo WScript.Quit >>"%temp%\%uac%.vbs"
+	"%temp%\%uac%.vbs" /f
+	del /f /q "%temp%\%uac%.vbs" & exit )
+endlocal
 
-xcopy Release\photo_of_the_day.exe "photo_of_the_day" /y /i /q /d
-xcopy just_have_exe.bat            "photo_of_the_day" /y /i /q /d
+:: copy lnk to startup directory.
 
-del photo_of_the_day.7z
-"C:\Program Files\7-Zip\7z.exe" a photo_of_the_day.7z photo_of_the_day
-rd /s /q photo_of_the_day
+set INK_NAME=photo_of_the_day.lnk
+set LNK_DEST=C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\%INK_NAME%
+set EXE_DIR=%LOCALAPPDATA%\photo_of_the_day
+if exist "%LNK_DEST%" (		
+		echo file %LNK_DEST% exists
+	) else (
+		cd /d %~dp0
+		copy %INK_NAME%  "%LNK_DEST%" /y
+	)
+
 echo "********************succeed********************"
 ping -n 5 127.0.0.1 > nul
