@@ -68,7 +68,7 @@ rd /s /q photo_of_the_day
 md photo_of_the_day
 
 xcopy Release\photo_of_the_day.exe "photo_of_the_day" /y /i /q /d
-xcopy just_have_exe.bat            "photo_of_the_day" /y /i /q /d
+copy just_have_exe.bat            "photo_of_the_day\double-click-to-install.bat" /y
 
 del photo_of_the_day.7z
 "C:\Program Files\7-Zip\7z.exe" a photo_of_the_day.7z photo_of_the_day
