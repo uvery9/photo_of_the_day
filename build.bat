@@ -36,7 +36,7 @@ set EXE_DIR=%LOCALAPPDATA%\photo_of_the_day
 set INK_FILE=photo_of_the_day.lnk
 
 echo Set oWS = WScript.CreateObject("WScript.Shell") > CreateShortcut.vbs
-echo sLinkFile = "D:\jared\coding\photo_of_the_day\photo_of_the_day.lnk" >> CreateShortcut.vbs
+echo sLinkFile = "%INK_FILE%" >> CreateShortcut.vbs
 echo Set oLink = oWS.CreateShortcut(sLinkFile) >> CreateShortcut.vbs
 echo oLink.TargetPath = "%EXE_DIR%\photo_of_the_day.exe" >> CreateShortcut.vbs
 REM echo oLink.TargetPath = "C:\Users\jared\AppData\Local\photo_of_the_day\photo_of_the_day.exe" >> CreateShortcut.vbs
